@@ -1,8 +1,8 @@
 {
   "name": "react-sip",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "React wrapper for jssip",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,5 +20,10 @@
   "bugs": {
     "url": "https://github.com/callthem-online/react-sip/issues"
   },
-  "homepage": "https://github.com/callthem-online/react-sip#readme"
+  "homepage": "https://github.com/callthem-online/react-sip#readme",
+  "dependencies": {
+    "jssip": "^3.0.13",
+    "prop-types": "^15.5.10",
+    "react": "^15.5.4"
+  }
 }
