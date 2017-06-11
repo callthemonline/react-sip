@@ -1,0 +1,24 @@
+{
+  "name": "react-sip",
+  "version": "0.0.1",
+  "description": "React wrapper for jssip",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/callthem-online/react-sip.git"
+  },
+  "keywords": [
+    "react",
+    "sip",
+    "jssip"
+  ],
+  "author": "callthem online (https://callthem.online/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/callthem-online/react-sip/issues"
+  },
+  "homepage": "https://github.com/callthem-online/react-sip#readme"
+}
