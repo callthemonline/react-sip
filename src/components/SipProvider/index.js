@@ -9,7 +9,7 @@ import {
   CONNECTING,
   REGISTERED,
   ERROR,
-} from '../../lib/status';
+} from '../../lib/statuses';
 
 let logger;
 const dummyLogger = {};

@@ -1,3 +1,3 @@
-import SipProvider from './SipProvider';
+import SipProvider from './components/SipProvider';
 
-export default SipProvider;
+export { SipProvider };

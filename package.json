@@ -1,10 +1,10 @@
 {
   "name": "react-sip",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "description": "React wrapper for jssip",
-  "main": "lib/index.js",
+  "main": "./dist/index.js",
   "scripts": {
-    "build": "babel src -d lib",
+    "build": "babel src -d dist",
     "prepublish": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
