@@ -1,9 +1,11 @@
 {
   "name": "react-sip",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React wrapper for jssip",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "scripts": {
+    "build": "babel src -d lib",
+    "prepublish": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,7 +25,25 @@
   "homepage": "https://github.com/callthem-online/react-sip#readme",
   "dependencies": {
     "jssip": "^3.0.13",
-    "prop-types": "^15.5.10",
-    "react": "^15.5.4"
+    "prop-types": "^15.5.10"
+  },
+  "peerDependencies": {
+    "react": "15.x"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1"
+  },
+  "babel": {
+    "plugins": [
+      "transform-es2015-modules-commonjs",
+      "transform-class-properties"
+    ],
+    "presets": [
+      "es2015",
+      "react"
+    ]
   }
 }

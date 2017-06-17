@@ -1,3 +1,3 @@
 import SipProvider from './SipProvider';
 
-export SipProvider;
+export default SipProvider;
