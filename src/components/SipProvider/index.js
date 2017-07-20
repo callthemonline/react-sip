@@ -28,11 +28,13 @@ export default class SipProvider extends React.Component {
     sipSessionExists: PropTypes.bool,
     sipSessionIsActive: PropTypes.bool,
     sipErrorLog: PropTypes.array,
+    sipStop: PropTypes.func,
   }
 
   static defaultProps = {
     iceServers: [],
     debug: false,
+    answer: false,
   }
 
   static propTypes = {
@@ -42,6 +44,8 @@ export default class SipProvider extends React.Component {
     password: PropTypes.string.isRequired,
     iceServers: PropTypes.array,
     debug: PropTypes.bool,
+    answer: PropTypes.bool,
+    sipStop: PropTypes.func,
   }
 
   constructor() {
@@ -55,6 +59,11 @@ export default class SipProvider extends React.Component {
 
     this.mounted = false;
     this.ua = null;
+  }
+
+  stopCall() { //call stop
+    this.ua.terminateSessions();
+    console.log('Answer auto OFF - inside the function');
   }
 
   getChildContext() {
@@ -77,6 +86,7 @@ export default class SipProvider extends React.Component {
       password,
       iceServers,
       debug,
+      answer,
     } = this.props;
 
 
@@ -89,6 +99,8 @@ export default class SipProvider extends React.Component {
       JsSIP.debug.disable('JsSIP:*');
       logger = dummyLogger;
     }
+
+
 
     this.remoteAudio = window.document.createElement('audio');
     window.document.body.appendChild(this.remoteAudio);
@@ -244,15 +256,25 @@ export default class SipProvider extends React.Component {
         this.remoteAudio.play();
       });
 
-      session.answer({
-        mediaConstraints: {
-          audio: true,
-          video: false,
-        },
-        pcConfig: {
-          iceServers,
-        },
-      });
+      if (answer) {
+        console.log('Answer auto ON');
+        session.answer({
+          mediaConstraints: {
+            audio: true,
+            video: false,
+          },
+          pcConfig: {
+            iceServers,
+          },
+        });
+
+      } else {
+        console.log('Answer auto OFF');
+        this.stopCall();
+      }
+
+
+
     });
     this.ua.start();
   }
