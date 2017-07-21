@@ -200,8 +200,12 @@ export default class SipProvider extends React.Component {
       if (!this.mounted) {
         return;
       }
+
+      // identify call direction
       if (data.originator === 'local') {
-        return;
+        var callDirection = 'out';
+      } else if (data.originator === 'remote') {
+        var callDirection = 'in';
       }
 
       const {
@@ -256,7 +260,7 @@ export default class SipProvider extends React.Component {
         this.remoteAudio.play();
       });
 
-      if (answer) {
+      if (callDirection === 'in' && answer) {
         console.log('Answer auto ON');
         session.answer({
           mediaConstraints: {
@@ -268,15 +272,28 @@ export default class SipProvider extends React.Component {
           },
         });
 
-      } else {
+      } else if (callDirection === 'in' && !answer) {
         console.log('Answer auto OFF');
         this.stopCall();
+
+      } else if (callDirection === 'out' ) {
+        console.log('OUTBOUND call');
       }
-
-
 
     });
     this.ua.start();
+
+    var options = {
+      'mediaConstraints': {'audio': true, 'video': false},
+      pcConfig: {
+        iceServers,
+      },
+      sessionTimersExpires: 120
+    };
+
+    // use this for call testing
+    this.ua.call('3600', options);
+
   }
 
   componentWillUnmount() {
