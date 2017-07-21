@@ -66,6 +66,22 @@ export default class SipProvider extends React.Component {
     console.log('Answer auto OFF - inside the function');
   }
 
+  startCall(destination) { //call start
+    const {
+      iceServers,
+    } = this.props;
+
+    var options = {
+      'mediaConstraints': {'audio': true, 'video': false},
+      pcConfig: {
+        iceServers,
+      },
+      sessionTimersExpires: 120
+    };
+
+    this.ua.call(destination, options);
+  }
+
   getChildContext() {
     const contact = this.ua && this.ua.contact && this.ua.contact.toString();
     const sipIdRegexResult = contactToSipIdRegex.exec(contact);
@@ -283,17 +299,8 @@ export default class SipProvider extends React.Component {
     });
     this.ua.start();
 
-    var options = {
-      'mediaConstraints': {'audio': true, 'video': false},
-      pcConfig: {
-        iceServers,
-      },
-      sessionTimersExpires: 120
-    };
-
-    // use this for call testing
-    this.ua.call('3600', options);
-
+    // use this for outbound call testing
+    // this.startCall('3500');
   }
 
   componentWillUnmount() {
