@@ -34,7 +34,7 @@ export default class SipProvider extends React.Component {
   static defaultProps = {
     iceServers: [],
     debug: false,
-    answer: false,
+    autoAnswer: false,
   }
 
   static propTypes = {
@@ -44,7 +44,7 @@ export default class SipProvider extends React.Component {
     password: PropTypes.string.isRequired,
     iceServers: PropTypes.array,
     debug: PropTypes.bool,
-    answer: PropTypes.bool,
+    autoAnswer: PropTypes.bool,
     sipStop: PropTypes.func,
   }
 
@@ -102,7 +102,7 @@ export default class SipProvider extends React.Component {
       password,
       iceServers,
       debug,
-      answer,
+      autoAnswer,
     } = this.props;
 
 
@@ -276,7 +276,7 @@ export default class SipProvider extends React.Component {
         this.remoteAudio.play();
       });
 
-      if (callDirection === 'in' && answer) {
+      if (callDirection === 'in' && autoAnswer) {
         console.log('Answer auto ON');
         session.answer({
           mediaConstraints: {
@@ -288,7 +288,7 @@ export default class SipProvider extends React.Component {
           },
         });
 
-      } else if (callDirection === 'in' && !answer) {
+      } else if (callDirection === 'in' && !autoAnswer) {
         console.log('Answer auto OFF');
         this.stopCall();
 
