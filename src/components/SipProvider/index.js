@@ -4,11 +4,17 @@ import PropTypes from 'prop-types';
 import JsSIP from 'jssip';
 
 import {
-  CONNECTED,
-  DISCONNECTED,
-  CONNECTING,
-  REGISTERED,
-  ERROR,
+  SIP_STATUS_CONNECTED,
+  SIP_STATUS_DISCONNECTED,
+  SIP_STATUS_CONNECTING,
+  SIP_STATUS_REGISTERED,
+  SIP_STATUS_ERROR,
+  CALL_STATUS_IDLE,
+  CALL_STATUS_STARTING,
+  CALL_STATUS_ACTIVE,
+  CALL_STATUS_STOPPING,
+  CALL_DIRECTION_INCOMING,
+  CALL_DIRECTION_OUTGOING,
 } from '../../lib/statuses';
 
 let logger;
@@ -30,6 +36,9 @@ export default class SipProvider extends React.Component {
     sipErrorLog: PropTypes.array,
     sipStart: PropTypes.func,
     sipStop: PropTypes.func,
+    sipCallStatus: PropTypes.string,
+    sipCallDirection: PropTypes.string,
+
   }
 
   static defaultProps = {
@@ -51,10 +60,13 @@ export default class SipProvider extends React.Component {
   constructor() {
     super();
     this.state = {
-      status: DISCONNECTED,
+      status: SIP_STATUS_DISCONNECTED,
       session: null,
       incomingSession: null,
       errorLog: [],
+      sipCallStatus: null,
+      sipCallDirection: null,
+
     };
 
     this.mounted = false;
@@ -96,6 +108,8 @@ export default class SipProvider extends React.Component {
       sipErrorLog: this.state.errorLog,
       sipStart: this.startCall,
       sipStop: this.stopCall,
+      sipCallStatus: this.state.callStatus,
+      sipCallDirection: this.state.callDirection,
     };
   }
 
@@ -140,7 +154,7 @@ export default class SipProvider extends React.Component {
       logger.debug('Error', error.message, error);
       this.onMount(function callback() {
         this.setState({
-          status: ERROR,
+          status: SIP_STATUS_ERROR,
           errorLog: [...this.state.errorLog, {
             message: error.message,
             time: new Date(),
@@ -155,7 +169,7 @@ export default class SipProvider extends React.Component {
         return;
       }
       this.setState({
-        status: CONNECTING,
+        status: SIP_STATUS_CONNECTING,
       });
     });
 
@@ -164,7 +178,7 @@ export default class SipProvider extends React.Component {
       if (!this.mounted) {
         return;
       }
-      this.setState({ status: CONNECTED });
+      this.setState({ status: SIP_STATUS_CONNECTED });
     });
 
     this.ua.on('disconnected', () => {
@@ -172,7 +186,7 @@ export default class SipProvider extends React.Component {
       if (!this.mounted) {
         return;
       }
-      this.setState({ status: DISCONNECTED });
+      this.setState({ status: SIP_STATUS_DISCONNECTED });
     });
 
     this.ua.on('registered', (data) => {
@@ -180,7 +194,7 @@ export default class SipProvider extends React.Component {
       if (!this.mounted) {
         return;
       }
-      this.setState({ status: REGISTERED });
+      this.setState({ status: SIP_STATUS_REGISTERED });
     });
 
     this.ua.on('unregistered', () => {
@@ -189,9 +203,9 @@ export default class SipProvider extends React.Component {
         return;
       }
       if (this.ua.isConnected()) {
-        this.setState({ status: CONNECTED });
+        this.setState({ status: SIP_STATUS_CONNECTED });
       } else {
-        this.setState({ status: DISCONNECTED });
+        this.setState({ status: SIP_STATUS_DISCONNECTED });
       }
     });
 
@@ -207,8 +221,8 @@ export default class SipProvider extends React.Component {
       }
       this.setState({
         status: this.ua.isConnected()
-          ? CONNECTED
-          : DISCONNECTED,
+          ? SIP_STATUS_ONNECTED
+          : SIP_STATUS_DISCONNECTED,
         errorLog: [...this.state.errorLog, {
           message: data.cause,
           time: new Date(),
