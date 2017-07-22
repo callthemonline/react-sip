@@ -44,6 +44,7 @@ export default class SipProvider extends React.Component {
     iceServers: [],
     debug: false,
     autoAnswer: false,
+    sessionTimersExpires: 120
   }
 
   static propTypes = {
@@ -54,6 +55,7 @@ export default class SipProvider extends React.Component {
     iceServers: PropTypes.array,
     debug: PropTypes.bool,
     autoAnswer: PropTypes.bool,
+    sessionTimersExpires: PropTypes.number,
   }
 
   constructor() {
@@ -68,7 +70,6 @@ export default class SipProvider extends React.Component {
 
     this.mounted = false;
     this.ua = null;
-    // this.stopCall = this.stopCall.bind(this);
   }
 
   answerCall = () => {
@@ -89,13 +90,13 @@ export default class SipProvider extends React.Component {
   stopCall = () => { //call stop
     this.setState({ callStatus: CALL_STATUS_STOPPING });
     this.ua.terminateSessions();
-    console.log('Answer auto OFF - inside the function');
   }
 
   startCall = (destination) => { //call start
     console.log(this);
     const {
       iceServers,
+      sessionTimersExpires,
     } = this.props;
 
     var options = {
@@ -104,7 +105,7 @@ export default class SipProvider extends React.Component {
       pcConfig: {
         iceServers,
       },
-      sessionTimersExpires: 120
+      sessionTimersExpires
     };
 
     this.ua.call(destination, options);
@@ -311,7 +312,7 @@ export default class SipProvider extends React.Component {
         console.log('Answer auto OFF');
 
       } else if (this.state.callDirection === CALL_DIRECTION_OUTGOING ) {
-        console.log('OUTBOUND call');
+        console.log('OUTGOING call');
       }
 
     });
