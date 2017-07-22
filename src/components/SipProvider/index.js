@@ -36,6 +36,7 @@ export default class SipProvider extends React.Component {
     sipErrorLog: PropTypes.array,
     sipStart: PropTypes.func,
     sipStop: PropTypes.func,
+    sipAnswer: PropTypes.func,
     callStatus: PropTypes.string,
     callDirection: PropTypes.string,
   }
@@ -70,6 +71,18 @@ export default class SipProvider extends React.Component {
     this.mounted = false;
     this.ua = null;
     // this.stopCall = this.stopCall.bind(this);
+  }
+
+  answerCall = () => {
+    this.ua.answer({
+      mediaConstraints: {
+        audio: true,
+        video: false,
+      },
+      pcConfig: {
+        iceServers: this.props.iceServers,
+      },
+    });
   }
 
   stopCall = () => { //call stop
@@ -108,6 +121,7 @@ export default class SipProvider extends React.Component {
       sipErrorLog: this.state.errorLog,
       sipStart: this.startCall,
       sipStop: this.stopCall,
+      sipAnswer: this.answerCall,
       callStatus: this.state.callStatus,
       callDirection: this.state.callDirection,
     };
@@ -203,9 +217,9 @@ export default class SipProvider extends React.Component {
         return;
       }
       if (this.ua.isConnected()) {
-        this.setState({ status: SIP_STATUS_CONNECTED });
+        this.setState({ status: SIP_STATUS_CONNECTED, callStatus: null, callDirection: null });
       } else {
-        this.setState({ status: SIP_STATUS_DISCONNECTED });
+        this.setState({ status: SIP_STATUS_DISCONNECTED, callStatus: null, callDirection: null });
       }
     });
 
@@ -238,9 +252,9 @@ export default class SipProvider extends React.Component {
 
       // identify call direction
       if (data.originator === 'local') {
-        var callDirection = 'out';
+        this.setState({ callDirection: CALL_DIRECTION_OUTGOING, callStatus: CALL_STATUS_STARTING });
       } else if (data.originator === 'remote') {
-        var callDirection = 'in';
+        this.setState({ callDirection: CALL_DIRECTION_INCOMING, callStatus: CALL_STATUS_STARTING });
       }
 
       const {
@@ -269,6 +283,8 @@ export default class SipProvider extends React.Component {
         this.setState({
           session: null,
           incomingSession: null,
+          callStatus: CALL_STATUS_IDLE,
+          callDirection: null,
         });
       });
 
@@ -280,6 +296,7 @@ export default class SipProvider extends React.Component {
           session: null,
           incomingSession: null,
           callStatus: CALL_STATUS_IDLE,
+          callDirection: null,
         });
       });
 
@@ -297,28 +314,19 @@ export default class SipProvider extends React.Component {
         this.setState({ callStatus: CALL_STATUS_ACTIVE });
       });
 
-      if (callDirection === 'in' && autoAnswer) {
+      if (this.state.callDirection === CALL_DIRECTION_INCOMING && autoAnswer) {
         console.log('Answer auto ON');
-        session.answer({
-          mediaConstraints: {
-            audio: true,
-            video: false,
-          },
-          pcConfig: {
-            iceServers,
-          },
-        });
-      } else if (callDirection === 'in' && !autoAnswer) {
+        this.answerCall();
+      } else if (this.state.callDirection === CALL_DIRECTION_INCOMING && !autoAnswer) {
         console.log('Answer auto OFF');
-        this.stopCall();
+        //this.stopCall();
 
-      } else if (callDirection === 'out' ) {
+      } else if (this.state.callDirection === CALL_DIRECTION_OUTGOING ) {
         console.log('OUTBOUND call');
       }
 
     });
     this.ua.start();
-
   }
 
   componentWillUnmount() {
