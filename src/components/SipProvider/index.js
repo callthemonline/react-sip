@@ -59,14 +59,15 @@ export default class SipProvider extends React.Component {
 
     this.mounted = false;
     this.ua = null;
+    // this.stopCall = this.stopCall.bind(this);
   }
 
-  stopCall() { //call stop
+  stopCall = () => { //call stop
     this.ua.terminateSessions();
     console.log('Answer auto OFF - inside the function');
   }
 
-  startCall(destination) { //call start
+  startCall = (destination) => { //call start
     console.log(this);
     const {
       iceServers,
