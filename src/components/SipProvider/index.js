@@ -47,6 +47,7 @@ export default class SipProvider extends React.Component {
     autoAnswer: false,
     sessionTimersExpires: 120,
     register: true,
+    extraHeaders: [],
   }
 
   static propTypes = {
@@ -58,6 +59,7 @@ export default class SipProvider extends React.Component {
     debug: PropTypes.bool,
     autoAnswer: PropTypes.bool,
     sessionTimersExpires: PropTypes.number,
+    extraHeaders: PropTypes.array,
     register: PropTypes.bool,
   }
 
@@ -99,10 +101,11 @@ export default class SipProvider extends React.Component {
     const {
       iceServers,
       sessionTimersExpires,
+      extraHeaders,
     } = this.props;
 
     var options = {
-      extraHeaders: [ 'X-Token: foo', 'X-Bar: bar' ],
+      extraHeaders,
       'mediaConstraints': {'audio': true, 'video': false},
       pcConfig: {
         iceServers,
@@ -191,7 +194,7 @@ export default class SipProvider extends React.Component {
       if (!this.mounted) {
         return;
       }
-      this.setState({ status: SIP_STATUS_CONNECTED });
+      this.setState({ status: SIP_STATUS_CONNECTED, callStatus: CALL_STATUS_IDLE });
     });
 
     this.ua.on('disconnected', () => {
