@@ -28,6 +28,7 @@ export default class SipProvider extends React.Component {
     sipSessionExists: PropTypes.bool,
     sipSessionIsActive: PropTypes.bool,
     sipErrorLog: PropTypes.array,
+    sipStart: PropTypes.func,
     sipStop: PropTypes.func,
   }
 
@@ -45,7 +46,6 @@ export default class SipProvider extends React.Component {
     iceServers: PropTypes.array,
     debug: PropTypes.bool,
     autoAnswer: PropTypes.bool,
-    sipStop: PropTypes.func,
   }
 
   constructor() {
@@ -67,11 +67,13 @@ export default class SipProvider extends React.Component {
   }
 
   startCall(destination) { //call start
+    console.log(this);
     const {
       iceServers,
     } = this.props;
 
     var options = {
+      extraHeaders: [ 'X-Token: foo', 'X-Bar: bar' ],
       'mediaConstraints': {'audio': true, 'video': false},
       pcConfig: {
         iceServers,
@@ -91,6 +93,8 @@ export default class SipProvider extends React.Component {
       sipSessionExists: !!this.state.incomingSession || !!this.state.session,
       sipSessionIsActive: !!this.state.session,
       sipErrorLog: this.state.errorLog,
+      sipStart: this.startCall,
+      sipStop: this.stopCall,
     };
   }
 
@@ -129,7 +133,7 @@ export default class SipProvider extends React.Component {
         uri: `sip:${user}@${host}`,
         password,
         sockets: [socket],
-        // register: true,
+        //register: false,
       });
     } catch (error) {
       logger.debug('Error', error.message, error);
@@ -299,8 +303,6 @@ export default class SipProvider extends React.Component {
     });
     this.ua.start();
 
-    // use this for outbound call testing
-    // this.startCall('3500');
   }
 
   componentWillUnmount() {
