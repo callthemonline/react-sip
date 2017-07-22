@@ -36,7 +36,6 @@ export default class SipProvider extends React.Component {
     sipStart: PropTypes.func,
     sipStop: PropTypes.func,
     sipAnswer: PropTypes.func,
-    rtcSessionExists: PropTypes.bool,
     callStatus: PropTypes.string,
     callDirection: PropTypes.string,
   }
@@ -126,7 +125,6 @@ export default class SipProvider extends React.Component {
       sipStart: this.startCall,
       sipStop: this.stopCall,
       sipAnswer: this.answerCall,
-      rtcSessionExists: !!this.state.rtcSession,
       callStatus: this.state.callStatus,
       callDirection: this.state.callDirection,
     };

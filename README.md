@@ -55,7 +55,6 @@ sipErrorLog: PropTypes.array
 sipStart: PropTypes.func
 sipStop: PropTypes.func
 sipAnswer: PropTypes.func
-rtcSessionExists: PropTypes.bool
 callStatus: PropTypes.string
 callDirection: PropTypes.string
 ```
