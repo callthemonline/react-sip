@@ -36,9 +36,8 @@ export default class SipProvider extends React.Component {
     sipErrorLog: PropTypes.array,
     sipStart: PropTypes.func,
     sipStop: PropTypes.func,
-    sipCallStatus: PropTypes.string,
-    sipCallDirection: PropTypes.string,
-
+    callStatus: PropTypes.string,
+    callDirection: PropTypes.string,
   }
 
   static defaultProps = {
@@ -64,9 +63,8 @@ export default class SipProvider extends React.Component {
       session: null,
       incomingSession: null,
       errorLog: [],
-      sipCallStatus: null,
-      sipCallDirection: null,
-
+      callStatus: null,
+      callDirection: null,
     };
 
     this.mounted = false;
@@ -108,8 +106,8 @@ export default class SipProvider extends React.Component {
       sipErrorLog: this.state.errorLog,
       sipStart: this.startCall,
       sipStop: this.stopCall,
-      sipCallStatus: this.state.callStatus,
-      sipCallDirection: this.state.callDirection,
+      callStatus: this.state.callStatus,
+      callDirection: this.state.callDirection,
     };
   }
 
@@ -306,6 +304,7 @@ export default class SipProvider extends React.Component {
             iceServers,
           },
         });
+        this.setState({ callStatus: CALL_STATUS_ACTIVE });
 
       } else if (callDirection === 'in' && !autoAnswer) {
         console.log('Answer auto OFF');
@@ -313,6 +312,7 @@ export default class SipProvider extends React.Component {
 
       } else if (callDirection === 'out' ) {
         console.log('OUTBOUND call');
+        this.setState({ callStatus: CALL_STATUS_ACTIVE });
       }
 
     });
