@@ -9,6 +9,7 @@ import {
   SIP_STATUS_CONNECTING,
   SIP_STATUS_REGISTERED,
   SIP_STATUS_ERROR,
+
   CALL_STATUS_IDLE,
   CALL_STATUS_STARTING,
   CALL_STATUS_ACTIVE,
@@ -44,7 +45,8 @@ export default class SipProvider extends React.Component {
     iceServers: [],
     debug: false,
     autoAnswer: false,
-    sessionTimersExpires: 120
+    sessionTimersExpires: 120,
+    register: true,
   }
 
   static propTypes = {
@@ -56,6 +58,7 @@ export default class SipProvider extends React.Component {
     debug: PropTypes.bool,
     autoAnswer: PropTypes.bool,
     sessionTimersExpires: PropTypes.number,
+    register: PropTypes.bool,
   }
 
   constructor() {
@@ -93,7 +96,6 @@ export default class SipProvider extends React.Component {
   }
 
   startCall = (destination) => { //call start
-    console.log(this);
     const {
       iceServers,
       sessionTimersExpires,
@@ -136,10 +138,9 @@ export default class SipProvider extends React.Component {
       iceServers,
       debug,
       autoAnswer,
+      register,
     } = this.props;
 
-
-    // still requires page reloding after the setting has changed
     // http://jssip.net/documentation/3.0.x/api/debug/
     if (debug) {
       JsSIP.debug.enable('JsSIP:*');
@@ -148,8 +149,6 @@ export default class SipProvider extends React.Component {
       JsSIP.debug.disable('JsSIP:*');
       logger = dummyLogger;
     }
-
-
 
     this.remoteAudio = window.document.createElement('audio');
     window.document.body.appendChild(this.remoteAudio);
@@ -162,7 +161,7 @@ export default class SipProvider extends React.Component {
         uri: `sip:${user}@${host}`,
         password,
         sockets: [socket],
-        //register: false,
+        register,
       });
     } catch (error) {
       logger.debug('Error', error.message, error);
@@ -245,7 +244,6 @@ export default class SipProvider extends React.Component {
     });
 
     this.ua.on('newRTCSession', ({ originator, session: rtcSession, request}) => {
-      console.log('DATA',{ originator, rtcSession, request});
       if (!this || !this.mounted) {
         return;
       }
@@ -295,7 +293,6 @@ export default class SipProvider extends React.Component {
       });
 
       rtcSession.on('accepted', () => {
-        console.log('ACCEPTED');
         if (!this.mounted) {
           return;
         }
