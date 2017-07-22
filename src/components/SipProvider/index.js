@@ -73,6 +73,7 @@ export default class SipProvider extends React.Component {
   }
 
   stopCall = () => { //call stop
+    this.setState({ callStatus: CALL_STATUS_STOPPING });
     this.ua.terminateSessions();
     console.log('Answer auto OFF - inside the function');
   }
@@ -93,6 +94,7 @@ export default class SipProvider extends React.Component {
     };
 
     this.ua.call(destination, options);
+    this.setState({ callStatus: CALL_STATUS_STARTING });
   }
 
   getChildContext() {
@@ -192,7 +194,7 @@ export default class SipProvider extends React.Component {
       if (!this.mounted) {
         return;
       }
-      this.setState({ status: SIP_STATUS_REGISTERED });
+      this.setState({ status: SIP_STATUS_REGISTERED , callStatus: CALL_STATUS_IDLE});
     });
 
     this.ua.on('unregistered', () => {
@@ -277,6 +279,7 @@ export default class SipProvider extends React.Component {
         this.setState({
           session: null,
           incomingSession: null,
+          callStatus: CALL_STATUS_IDLE,
         });
       });
 
@@ -291,6 +294,7 @@ export default class SipProvider extends React.Component {
 
         this.remoteAudio.src = window.URL.createObjectURL(session.connection.getRemoteStreams()[0]);
         this.remoteAudio.play();
+        this.setState({ callStatus: CALL_STATUS_ACTIVE });
       });
 
       if (callDirection === 'in' && autoAnswer) {
@@ -304,15 +308,12 @@ export default class SipProvider extends React.Component {
             iceServers,
           },
         });
-        this.setState({ callStatus: CALL_STATUS_ACTIVE });
-
       } else if (callDirection === 'in' && !autoAnswer) {
         console.log('Answer auto OFF');
         this.stopCall();
 
       } else if (callDirection === 'out' ) {
         console.log('OUTBOUND call');
-        this.setState({ callStatus: CALL_STATUS_ACTIVE });
       }
 
     });
