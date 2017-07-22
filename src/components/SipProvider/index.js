@@ -62,7 +62,7 @@ export default class SipProvider extends React.Component {
     this.state = {
       status: SIP_STATUS_DISCONNECTED,
       session: null,
-      incomingSession: null,
+      rtcSession: null,
       errorLog: [],
       callStatus: null,
       callDirection: null,
@@ -74,7 +74,10 @@ export default class SipProvider extends React.Component {
   }
 
   answerCall = () => {
-    this.ua.answer({
+    if (!this.state.rtcSession) {
+      throw new Error('Can\'t answer - no RTC session');
+    }
+    this.state.rtcSession.answer({
       mediaConstraints: {
         audio: true,
         video: false,
@@ -116,7 +119,7 @@ export default class SipProvider extends React.Component {
     return {
       sipId: sipIdRegexResult ? sipIdRegexResult[0] : '',
       sipStatus: this.state.status,
-      sipSessionExists: !!this.state.incomingSession || !!this.state.session,
+      sipSessionExists: !!this.state.rtcSession || !!this.state.session,
       sipSessionIsActive: !!this.state.session,
       sipErrorLog: this.state.errorLog,
       sipStart: this.startCall,
@@ -244,72 +247,69 @@ export default class SipProvider extends React.Component {
       });
     });
 
-    this.ua.on('newRTCSession', (data) => {
-      logger.debug('UA "newRTCSession" event', data);
-      if (!this.mounted) {
+    this.ua.on('newRTCSession', ({ originator, session: rtcSession, request}) => {
+      console.log('DATA',{ originator, rtcSession, request});
+      if (!this || !this.mounted) {
         return;
       }
 
       // identify call direction
-      if (data.originator === 'local') {
+      if (originator === 'local') {
         this.setState({ callDirection: CALL_DIRECTION_OUTGOING, callStatus: CALL_STATUS_STARTING });
-      } else if (data.originator === 'remote') {
+      } else if (originator === 'remote') {
         this.setState({ callDirection: CALL_DIRECTION_INCOMING, callStatus: CALL_STATUS_STARTING });
       }
 
       const {
-        session: sessionInState,
-        incomingSession: incomingSessionInState,
+        sipSession: sessionInState,
+        rtcSession: rtcSessionInState,
       } = this.state;
-      const {
-        session,
-      } = data;
 
       // Avoid if busy or other incoming
-      if (sessionInState || incomingSessionInState) {
+      if (sessionInState || rtcSessionInState) {
         logger.debug('incoming call replied with 486 "Busy Here"');
-        session.terminate({
+        rtcSession.terminate({
           status_code: 486,
           reason_phrase: 'Busy Here',
         });
         return;
       }
 
-      this.setState({ incomingSession: session });
-      session.on('failed', () => {
+      this.setState({ rtcSession });
+      rtcSession.on('failed', () => {
         if (!this.mounted) {
           return;
         }
         this.setState({
-          session: null,
-          incomingSession: null,
+          sipSession: null,
+          rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
           callDirection: null,
         });
       });
 
-      session.on('ended', () => {
+      rtcSession.on('ended', () => {
         if (!this.mounted) {
           return;
         }
         this.setState({
-          session: null,
-          incomingSession: null,
+          sipSession: null,
+          rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
           callDirection: null,
         });
       });
 
-      session.on('accepted', () => {
+      rtcSession.on('accepted', () => {
+        console.log('ACCEPTED');
         if (!this.mounted) {
           return;
         }
         this.setState({
-          session,
-          incomingSession: null,
+          rtcSession,
         });
 
-        this.remoteAudio.src = window.URL.createObjectURL(session.connection.getRemoteStreams()[0]);
+        this.remoteAudio.src = window.URL.createObjectURL(rtcSession.connection.getRemoteStreams()[0]);
         this.remoteAudio.play();
         this.setState({ callStatus: CALL_STATUS_ACTIVE });
       });
