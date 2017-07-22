@@ -31,12 +31,11 @@ export default class SipProvider extends React.Component {
   static childContextTypes = {
     sipId: PropTypes.string,
     sipStatus: PropTypes.string,
-    sipSessionExists: PropTypes.bool,
-    sipSessionIsActive: PropTypes.bool,
     sipErrorLog: PropTypes.array,
     sipStart: PropTypes.func,
     sipStop: PropTypes.func,
     sipAnswer: PropTypes.func,
+    rtcSessionExists: PropTypes.bool,
     callStatus: PropTypes.string,
     callDirection: PropTypes.string,
   }
@@ -61,7 +60,6 @@ export default class SipProvider extends React.Component {
     super();
     this.state = {
       status: SIP_STATUS_DISCONNECTED,
-      session: null,
       rtcSession: null,
       errorLog: [],
       callStatus: null,
@@ -119,12 +117,10 @@ export default class SipProvider extends React.Component {
     return {
       sipId: sipIdRegexResult ? sipIdRegexResult[0] : '',
       sipStatus: this.state.status,
-      sipSessionExists: !!this.state.rtcSession || !!this.state.session,
-      sipSessionIsActive: !!this.state.session,
-      sipErrorLog: this.state.errorLog,
       sipStart: this.startCall,
       sipStop: this.stopCall,
       sipAnswer: this.answerCall,
+      rtcSessionExists: !!this.state.rtcSession,
       callStatus: this.state.callStatus,
       callDirection: this.state.callDirection,
     };
@@ -261,12 +257,11 @@ export default class SipProvider extends React.Component {
       }
 
       const {
-        sipSession: sessionInState,
         rtcSession: rtcSessionInState,
       } = this.state;
 
       // Avoid if busy or other incoming
-      if (sessionInState || rtcSessionInState) {
+      if (rtcSessionInState) {
         logger.debug('incoming call replied with 486 "Busy Here"');
         rtcSession.terminate({
           status_code: 486,
@@ -281,7 +276,6 @@ export default class SipProvider extends React.Component {
           return;
         }
         this.setState({
-          sipSession: null,
           rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
           callDirection: null,
@@ -293,7 +287,6 @@ export default class SipProvider extends React.Component {
           return;
         }
         this.setState({
-          sipSession: null,
           rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
           callDirection: null,
@@ -305,9 +298,9 @@ export default class SipProvider extends React.Component {
         if (!this.mounted) {
           return;
         }
-        this.setState({
-          rtcSession,
-        });
+        // this.setState({
+        //   rtcSession,
+        // });
 
         this.remoteAudio.src = window.URL.createObjectURL(rtcSession.connection.getRemoteStreams()[0]);
         this.remoteAudio.play();
@@ -319,7 +312,6 @@ export default class SipProvider extends React.Component {
         this.answerCall();
       } else if (this.state.callDirection === CALL_DIRECTION_INCOMING && !autoAnswer) {
         console.log('Answer auto OFF');
-        //this.stopCall();
 
       } else if (this.state.callDirection === CALL_DIRECTION_OUTGOING ) {
         console.log('OUTBOUND call');
