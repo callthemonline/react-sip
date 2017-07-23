@@ -9,7 +9,6 @@ import {
   SIP_STATUS_CONNECTING,
   SIP_STATUS_REGISTERED,
   SIP_STATUS_ERROR,
-
   CALL_STATUS_IDLE,
   CALL_STATUS_STARTING,
   CALL_STATUS_ACTIVE,
@@ -28,7 +27,6 @@ dummyLogger.debug = () => {};
 const contactToSipIdRegex = /[a-zA-Z0-9]+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*/;
 
 export default class SipProvider extends React.Component {
-
   static childContextTypes = {
     sipId: PropTypes.string,
     sipStatus: PropTypes.string,
@@ -38,7 +36,7 @@ export default class SipProvider extends React.Component {
     sipAnswer: PropTypes.func,
     callStatus: PropTypes.string,
     callDirection: PropTypes.string,
-  }
+  };
 
   static defaultProps = {
     iceServers: [],
@@ -47,7 +45,7 @@ export default class SipProvider extends React.Component {
     sessionTimersExpires: 120,
     register: true,
     extraHeaders: [],
-  }
+  };
 
   static propTypes = {
     host: PropTypes.string.isRequired,
@@ -60,7 +58,7 @@ export default class SipProvider extends React.Component {
     sessionTimersExpires: PropTypes.number,
     extraHeaders: PropTypes.array,
     register: PropTypes.bool,
-  }
+  };
 
   constructor() {
     super();
@@ -78,7 +76,7 @@ export default class SipProvider extends React.Component {
 
   answerCall = () => {
     if (!this.state.rtcSession) {
-      throw new Error('Can\'t answer - no RTC session');
+      throw new Error("Can't answer - no RTC session");
     }
     this.state.rtcSession.answer({
       mediaConstraints: {
@@ -89,32 +87,30 @@ export default class SipProvider extends React.Component {
         iceServers: this.props.iceServers,
       },
     });
-  }
+  };
 
-  stopCall = () => { //call stop
+  stopCall = () => {
+    // call stop
     this.setState({ callStatus: CALL_STATUS_STOPPING });
     this.ua.terminateSessions();
-  }
+  };
 
-  startCall = (destination) => { //call start
-    const {
-      iceServers,
-      sessionTimersExpires,
-      extraHeaders,
-    } = this.props;
+  startCall = (destination) => {
+    // call start
+    const { iceServers, sessionTimersExpires, extraHeaders } = this.props;
 
-    var options = {
+    const options = {
       extraHeaders,
-      'mediaConstraints': {'audio': true, 'video': false},
+      mediaConstraints: { audio: true, video: false },
       pcConfig: {
         iceServers,
       },
-      sessionTimersExpires
+      sessionTimersExpires,
     };
 
     this.ua.call(destination, options);
     this.setState({ callStatus: CALL_STATUS_STARTING });
-  }
+  };
 
   getChildContext() {
     const contact = this.ua && this.ua.contact && this.ua.contact.toString();
@@ -131,16 +127,7 @@ export default class SipProvider extends React.Component {
   }
 
   componentDidMount() {
-    const {
-      host,
-      port,
-      user,
-      password,
-      iceServers,
-      debug,
-      autoAnswer,
-      register,
-    } = this.props;
+    const { host, port, user, password, iceServers, debug, autoAnswer, register } = this.props;
 
     // http://jssip.net/documentation/3.0.x/api/debug/
     if (debug) {
@@ -169,10 +156,13 @@ export default class SipProvider extends React.Component {
       this.onMount(function callback() {
         this.setState({
           status: SIP_STATUS_ERROR,
-          errorLog: [...this.state.errorLog, {
-            message: error.message,
-            time: new Date(),
-          }],
+          errorLog: [
+            ...this.state.errorLog,
+            {
+              message: error.message,
+              time: new Date(),
+            },
+          ],
         });
       });
     }
@@ -208,7 +198,7 @@ export default class SipProvider extends React.Component {
       if (!this.mounted) {
         return;
       }
-      this.setState({ status: SIP_STATUS_REGISTERED , callStatus: CALL_STATUS_IDLE});
+      this.setState({ status: SIP_STATUS_REGISTERED, callStatus: CALL_STATUS_IDLE });
     });
 
     this.ua.on('unregistered', () => {
@@ -234,17 +224,18 @@ export default class SipProvider extends React.Component {
         this.setState({ status: 'disconnected' });
       }
       this.setState({
-        status: this.ua.isConnected()
-          ? SIP_STATUS_ONNECTED
-          : SIP_STATUS_DISCONNECTED,
-        errorLog: [...this.state.errorLog, {
-          message: data.cause,
-          time: new Date(),
-        }],
+        status: this.ua.isConnected() ? SIP_STATUS_ONNECTED : SIP_STATUS_DISCONNECTED,
+        errorLog: [
+          ...this.state.errorLog,
+          {
+            message: data.cause,
+            time: new Date(),
+          },
+        ],
       });
     });
 
-    this.ua.on('newRTCSession', ({ originator, session: rtcSession, request}) => {
+    this.ua.on('newRTCSession', ({ originator, session: rtcSession, request }) => {
       if (!this || !this.mounted) {
         return;
       }
@@ -256,9 +247,7 @@ export default class SipProvider extends React.Component {
         this.setState({ callDirection: CALL_DIRECTION_INCOMING, callStatus: CALL_STATUS_STARTING });
       }
 
-      const {
-        rtcSession: rtcSessionInState,
-      } = this.state;
+      const { rtcSession: rtcSessionInState } = this.state;
 
       // Avoid if busy or other incoming
       if (rtcSessionInState) {
@@ -298,7 +287,9 @@ export default class SipProvider extends React.Component {
           return;
         }
 
-        this.remoteAudio.src = window.URL.createObjectURL(rtcSession.connection.getRemoteStreams()[0]);
+        this.remoteAudio.src = window.URL.createObjectURL(
+          rtcSession.connection.getRemoteStreams()[0],
+        );
         this.remoteAudio.play();
         this.setState({ callStatus: CALL_STATUS_ACTIVE });
       });
@@ -308,11 +299,9 @@ export default class SipProvider extends React.Component {
         this.answerCall();
       } else if (this.state.callDirection === CALL_DIRECTION_INCOMING && !autoAnswer) {
         console.log('Answer auto OFF');
-
-      } else if (this.state.callDirection === CALL_DIRECTION_OUTGOING ) {
+      } else if (this.state.callDirection === CALL_DIRECTION_OUTGOING) {
         console.log('OUTGOING call');
       }
-
     });
     this.ua.start();
   }
