@@ -1,4 +1,3 @@
-// import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import JsSIP from 'jssip';
@@ -9,7 +8,6 @@ import {
   SIP_STATUS_CONNECTING,
   SIP_STATUS_REGISTERED,
   SIP_STATUS_ERROR,
-
   CALL_STATUS_IDLE,
   CALL_STATUS_STARTING,
   CALL_STATUS_ACTIVE,
@@ -28,17 +26,30 @@ dummyLogger.debug = () => {};
 const contactToSipIdRegex = /[a-zA-Z0-9]+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*/;
 
 export default class SipProvider extends React.Component {
-
   static childContextTypes = {
     sipId: PropTypes.string,
     sipStatus: PropTypes.string,
-    sipErrorLog: PropTypes.array,
+    sipErrorLog: PropTypes.arrayOf(PropTypes.object),
     sipStart: PropTypes.func,
     sipStop: PropTypes.func,
     sipAnswer: PropTypes.func,
     callStatus: PropTypes.string,
     callDirection: PropTypes.string,
-  }
+  };
+
+  static propTypes = {
+    host: PropTypes.string.isRequired,
+    port: PropTypes.string.isRequired,
+    user: PropTypes.string.isRequired,
+    password: PropTypes.string.isRequired,
+    iceServers: PropTypes.arrayOf(PropTypes.object),
+    debug: PropTypes.bool,
+    autoAnswer: PropTypes.bool,
+    sessionTimersExpires: PropTypes.number,
+    extraHeaders: PropTypes.arrayOf(PropTypes.string),
+    register: PropTypes.bool,
+    children: PropTypes.node,
+  };
 
   static defaultProps = {
     iceServers: [],
@@ -47,20 +58,8 @@ export default class SipProvider extends React.Component {
     sessionTimersExpires: 120,
     register: true,
     extraHeaders: [],
-  }
-
-  static propTypes = {
-    host: PropTypes.string.isRequired,
-    port: PropTypes.string.isRequired,
-    user: PropTypes.string.isRequired,
-    password: PropTypes.string.isRequired,
-    iceServers: PropTypes.array,
-    debug: PropTypes.bool,
-    autoAnswer: PropTypes.bool,
-    sessionTimersExpires: PropTypes.number,
-    extraHeaders: PropTypes.array,
-    register: PropTypes.bool,
-  }
+    children: null,
+  };
 
   constructor() {
     super();
@@ -74,46 +73,6 @@ export default class SipProvider extends React.Component {
 
     this.mounted = false;
     this.ua = null;
-  }
-
-  answerCall = () => {
-    if (!this.state.rtcSession) {
-      throw new Error('Can\'t answer - no RTC session');
-    }
-    this.state.rtcSession.answer({
-      mediaConstraints: {
-        audio: true,
-        video: false,
-      },
-      pcConfig: {
-        iceServers: this.props.iceServers,
-      },
-    });
-  }
-
-  stopCall = () => { //call stop
-    this.setState({ callStatus: CALL_STATUS_STOPPING });
-    this.ua.terminateSessions();
-  }
-
-  startCall = (destination) => { //call start
-    const {
-      iceServers,
-      sessionTimersExpires,
-      extraHeaders,
-    } = this.props;
-
-    var options = {
-      extraHeaders,
-      'mediaConstraints': {'audio': true, 'video': false},
-      pcConfig: {
-        iceServers,
-      },
-      sessionTimersExpires
-    };
-
-    this.ua.call(destination, options);
-    this.setState({ callStatus: CALL_STATUS_STARTING });
   }
 
   getChildContext() {
@@ -131,16 +90,7 @@ export default class SipProvider extends React.Component {
   }
 
   componentDidMount() {
-    const {
-      host,
-      port,
-      user,
-      password,
-      iceServers,
-      debug,
-      autoAnswer,
-      register,
-    } = this.props;
+    const { host, port, user, password, debug, autoAnswer, register } = this.props;
 
     // http://jssip.net/documentation/3.0.x/api/debug/
     if (debug) {
@@ -169,10 +119,13 @@ export default class SipProvider extends React.Component {
       this.onMount(function callback() {
         this.setState({
           status: SIP_STATUS_ERROR,
-          errorLog: [...this.state.errorLog, {
-            message: error.message,
-            time: new Date(),
-          }],
+          errorLog: [
+            ...this.state.errorLog,
+            {
+              message: error.message,
+              time: new Date(),
+            },
+          ],
         });
       });
     }
@@ -192,7 +145,10 @@ export default class SipProvider extends React.Component {
       if (!this.mounted) {
         return;
       }
-      this.setState({ status: SIP_STATUS_CONNECTED, callStatus: CALL_STATUS_IDLE });
+      this.setState({
+        status: SIP_STATUS_CONNECTED,
+        callStatus: CALL_STATUS_IDLE,
+      });
     });
 
     this.ua.on('disconnected', () => {
@@ -208,7 +164,10 @@ export default class SipProvider extends React.Component {
       if (!this.mounted) {
         return;
       }
-      this.setState({ status: SIP_STATUS_REGISTERED , callStatus: CALL_STATUS_IDLE});
+      this.setState({
+        status: SIP_STATUS_REGISTERED,
+        callStatus: CALL_STATUS_IDLE,
+      });
     });
 
     this.ua.on('unregistered', () => {
@@ -217,9 +176,17 @@ export default class SipProvider extends React.Component {
         return;
       }
       if (this.ua.isConnected()) {
-        this.setState({ status: SIP_STATUS_CONNECTED, callStatus: null, callDirection: null });
+        this.setState({
+          status: SIP_STATUS_CONNECTED,
+          callStatus: null,
+          callDirection: null,
+        });
       } else {
-        this.setState({ status: SIP_STATUS_DISCONNECTED, callStatus: null, callDirection: null });
+        this.setState({
+          status: SIP_STATUS_DISCONNECTED,
+          callStatus: null,
+          callDirection: null,
+        });
       }
     });
 
@@ -234,31 +201,36 @@ export default class SipProvider extends React.Component {
         this.setState({ status: 'disconnected' });
       }
       this.setState({
-        status: this.ua.isConnected()
-          ? SIP_STATUS_ONNECTED
-          : SIP_STATUS_DISCONNECTED,
-        errorLog: [...this.state.errorLog, {
-          message: data.cause,
-          time: new Date(),
-        }],
+        status: this.ua.isConnected() ? SIP_STATUS_CONNECTED : SIP_STATUS_DISCONNECTED,
+        errorLog: [
+          ...this.state.errorLog,
+          {
+            message: data.cause,
+            time: new Date(),
+          },
+        ],
       });
     });
 
-    this.ua.on('newRTCSession', ({ originator, session: rtcSession, request}) => {
+    this.ua.on('newRTCSession', ({ originator, session: rtcSession }) => {
       if (!this || !this.mounted) {
         return;
       }
 
       // identify call direction
       if (originator === 'local') {
-        this.setState({ callDirection: CALL_DIRECTION_OUTGOING, callStatus: CALL_STATUS_STARTING });
+        this.setState({
+          callDirection: CALL_DIRECTION_OUTGOING,
+          callStatus: CALL_STATUS_STARTING,
+        });
       } else if (originator === 'remote') {
-        this.setState({ callDirection: CALL_DIRECTION_INCOMING, callStatus: CALL_STATUS_STARTING });
+        this.setState({
+          callDirection: CALL_DIRECTION_INCOMING,
+          callStatus: CALL_STATUS_STARTING,
+        });
       }
 
-      const {
-        rtcSession: rtcSessionInState,
-      } = this.state;
+      const { rtcSession: rtcSessionInState } = this.state;
 
       // Avoid if busy or other incoming
       if (rtcSessionInState) {
@@ -298,7 +270,9 @@ export default class SipProvider extends React.Component {
           return;
         }
 
-        this.remoteAudio.src = window.URL.createObjectURL(rtcSession.connection.getRemoteStreams()[0]);
+        this.remoteAudio.src = window.URL.createObjectURL(
+          rtcSession.connection.getRemoteStreams()[0],
+        );
         this.remoteAudio.play();
         this.setState({ callStatus: CALL_STATUS_ACTIVE });
       });
@@ -308,11 +282,9 @@ export default class SipProvider extends React.Component {
         this.answerCall();
       } else if (this.state.callDirection === CALL_DIRECTION_INCOMING && !autoAnswer) {
         console.log('Answer auto OFF');
-
-      } else if (this.state.callDirection === CALL_DIRECTION_OUTGOING ) {
+      } else if (this.state.callDirection === CALL_DIRECTION_OUTGOING) {
         console.log('OUTGOING call');
       }
-
     });
     this.ua.start();
   }
@@ -321,6 +293,44 @@ export default class SipProvider extends React.Component {
     delete this.remoteAudio;
     this.mounted = false;
   }
+
+  answerCall = () => {
+    if (!this.state.rtcSession) {
+      throw new Error("Can't answer - no RTC session");
+    }
+    this.state.rtcSession.answer({
+      mediaConstraints: {
+        audio: true,
+        video: false,
+      },
+      pcConfig: {
+        iceServers: this.props.iceServers,
+      },
+    });
+  };
+
+  stopCall = () => {
+    // call stop
+    this.setState({ callStatus: CALL_STATUS_STOPPING });
+    this.ua.terminateSessions();
+  };
+
+  startCall = (destination) => {
+    // call start
+    const { iceServers, sessionTimersExpires, extraHeaders } = this.props;
+
+    const options = {
+      extraHeaders,
+      mediaConstraints: { audio: true, video: false },
+      pcConfig: {
+        iceServers,
+      },
+      sessionTimersExpires,
+    };
+
+    this.ua.call(destination, options);
+    this.setState({ callStatus: CALL_STATUS_STARTING });
+  };
 
   render() {
     return this.props.children;
