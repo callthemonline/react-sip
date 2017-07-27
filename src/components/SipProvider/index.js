@@ -32,6 +32,8 @@ export default class SipProvider extends React.Component {
     sipErrorLog: PropTypes.arrayOf(PropTypes.object),
     sipStart: PropTypes.func,
     sipStop: PropTypes.func,
+    sipRegister: PropTypes.func,
+    sipUnregister: PropTypes.func,
     sipAnswer: PropTypes.func,
     callStatus: PropTypes.string,
     callDirection: PropTypes.string,
@@ -83,6 +85,8 @@ export default class SipProvider extends React.Component {
       sipStatus: this.state.status,
       sipStart: this.startCall,
       sipStop: this.stopCall,
+      sipRegister: this.registerSip,
+      sipUnregister: this.unregisterSip,
       sipAnswer: this.answerCall,
       callStatus: this.state.callStatus,
       callDirection: this.state.callDirection,
@@ -286,6 +290,7 @@ export default class SipProvider extends React.Component {
         console.log('OUTGOING call');
       }
     });
+
     this.ua.start();
   }
 
@@ -307,6 +312,13 @@ export default class SipProvider extends React.Component {
         iceServers: this.props.iceServers,
       },
     });
+  };
+
+  registerSip = () => {
+    this.ua.register();
+  };
+  unregisterSip = () => {
+    this.ua.unregister();
   };
 
   stopCall = () => {
