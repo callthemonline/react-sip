@@ -315,10 +315,10 @@ export default class SipProvider extends React.Component {
   };
 
   registerSip = () => {
-    this.ua.register();
+    return this.ua.register();
   };
   unregisterSip = () => {
-    this.ua.unregister();
+    return this.ua.unregister();
   };
 
   stopCall = () => {
