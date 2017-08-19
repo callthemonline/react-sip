@@ -20,7 +20,7 @@ import { SipProvider } from './components/SipProvider';
 import App from './components/App';
 
 // define sipHost, sipPort, sipUser, sipPassword
-// optional: register, sipDebug, iceServerUrls, extraHeaders, sessionTimersExpires, autoAnswer
+// optional: autoRegister, sipDebug, iceServerUrls, extraHeaders, sessionTimersExpires, autoAnswer
 
 ReactDOM.render(
   <SipProvider
@@ -28,7 +28,7 @@ ReactDOM.render(
     port={sipPort}
     user={sipUser}
     password={sipPassword}
-    register={sipRegister} // enable/disable REGISTER, default: true
+    autoRegister={sipRegister} // enable/disable REGISTER, default: true, see jssip.ua option `register`
     debug={sipDebug} // true / false
     autoAnswer={autoAnswer} // automatically answer incoming sessions, default: false
     sessionTimersExpires={sessionTimersExpires} // Min-SE: value, default set to 120, not 90
@@ -54,6 +54,8 @@ sipStatus: PropTypes.string
 sipErrorLog: PropTypes.array
 sipStart: PropTypes.func
 sipStop: PropTypes.func
+sipRegister: PropTypes.func
+sipUnregister: PropTypes.func
 sipAnswer: PropTypes.func
 callStatus: PropTypes.string
 callDirection: PropTypes.string
@@ -68,6 +70,8 @@ callDirection: PropTypes.string
 _(These can be used to more intuitively display components)_
 
 `sipStart(destination), sipStop(), sipAnswer()` are functions to manage the call.
+
+You can also `sipRegister()` and `sipUnregister()` manually when `autoRegister` is set to `false` for advanced registration scenarios.
 
 Sample context usage
 ---
