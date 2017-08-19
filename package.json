@@ -1,6 +1,6 @@
 {
   "name": "react-sip",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "React wrapper for jssip",
   "main": "./dist/index.js",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/callthem-online/react-sip.git"
+    "url": "git+ssh://git@github.com/callthemonline/react-sip.git"
   },
   "keywords": [
     "react",
@@ -24,9 +24,9 @@
   "author": "callthem online (https://callthem.online/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/callthem-online/react-sip/issues"
+    "url": "https://github.com/callthemonline/react-sip/issues"
   },
-  "homepage": "https://github.com/callthem-online/react-sip#readme",
+  "homepage": "https://github.com/callthemonline/react-sip#readme",
   "dependencies": {
     "jssip": "3.x",
     "prop-types": "15.x"
