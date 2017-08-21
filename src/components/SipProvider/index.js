@@ -43,6 +43,7 @@ export default class SipProvider extends React.Component {
     host: PropTypes.string.isRequired,
     port: PropTypes.string.isRequired,
     user: PropTypes.string.isRequired,
+    uri: PropTypes.string,
     password: PropTypes.string.isRequired,
     iceServers: PropTypes.arrayOf(PropTypes.object),
     debug: PropTypes.bool,
@@ -61,6 +62,7 @@ export default class SipProvider extends React.Component {
     autoRegister: true,
     extraHeaders: [],
     children: null,
+    uri: null,
   };
 
   constructor() {
@@ -94,7 +96,7 @@ export default class SipProvider extends React.Component {
   }
 
   componentDidMount() {
-    const { host, port, user, password, debug, autoAnswer, autoRegister } = this.props;
+    const { host, port, user, uri, password, debug, autoAnswer, autoRegister } = this.props;
 
     // http://jssip.net/documentation/3.0.x/api/debug/
     if (debug) {
@@ -113,7 +115,7 @@ export default class SipProvider extends React.Component {
 
     try {
       this.ua = new JsSIP.UA({
-        uri: `sip:${user}@${host}`,
+        uri: uri || `sip:${user}@${host}`,
         password,
         sockets: [socket],
         register: autoRegister,
