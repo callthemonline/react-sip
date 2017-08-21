@@ -49,7 +49,7 @@ export default class SipProvider extends React.Component {
     debug: PropTypes.bool,
     autoAnswer: PropTypes.bool,
     sessionTimersExpires: PropTypes.number,
-    extraHeaders: PropTypes.arrayOf(PropTypes.string),
+    extraHeaders: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
     autoRegister: PropTypes.bool,
     children: PropTypes.node,
   };
@@ -60,7 +60,7 @@ export default class SipProvider extends React.Component {
     autoAnswer: false,
     sessionTimersExpires: 120,
     autoRegister: true,
-    extraHeaders: [],
+    extraHeaders: { register: [], invite: [] },
     children: null,
     uri: null,
   };
@@ -331,10 +331,11 @@ export default class SipProvider extends React.Component {
 
   startCall = (destination) => {
     // call start
-    const { iceServers, sessionTimersExpires, extraHeaders } = this.props;
+    const { iceServers, sessionTimersExpires } = this.props;
+    const extraHeadersInvite = this.props.extraHeaders.invite;
 
     const options = {
-      extraHeaders,
+      extraHeaders: extraHeadersInvite,
       mediaConstraints: { audio: true, video: false },
       pcConfig: {
         iceServers,
