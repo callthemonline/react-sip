@@ -42,9 +42,9 @@ export default class SipProvider extends React.Component {
   static propTypes = {
     host: PropTypes.string.isRequired,
     port: PropTypes.string.isRequired,
-    user: PropTypes.string.isRequired,
+    user: PropTypes.string,
     uri: PropTypes.string,
-    password: PropTypes.string.isRequired,
+    password: PropTypes.string,
     iceServers: PropTypes.arrayOf(PropTypes.object),
     debug: PropTypes.bool,
     autoAnswer: PropTypes.bool,
@@ -293,6 +293,10 @@ export default class SipProvider extends React.Component {
       }
     });
 
+    const extraHeadersRegister = this.props.extraHeaders.register;
+    if (extraHeadersRegister.length) {
+      this.ua.registrator().setExtraHeaders(extraHeadersRegister);
+    }
     this.ua.start();
   }
 
