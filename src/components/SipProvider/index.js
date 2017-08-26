@@ -37,6 +37,7 @@ export default class SipProvider extends React.Component {
     sipAnswer: PropTypes.func,
     callStatus: PropTypes.string,
     callDirection: PropTypes.string,
+    callCounterpart: PropTypes.string,
   };
 
   static propTypes = {
@@ -73,6 +74,7 @@ export default class SipProvider extends React.Component {
       errorLog: [],
       callStatus: null,
       callDirection: null,
+      callCounterpart: null,
     };
 
     this.mounted = false;
@@ -92,6 +94,7 @@ export default class SipProvider extends React.Component {
       sipAnswer: this.answerCall,
       callStatus: this.state.callStatus,
       callDirection: this.state.callDirection,
+      callCounterpart: this.state.callCounterpart,
     };
   }
 
@@ -218,7 +221,7 @@ export default class SipProvider extends React.Component {
       });
     });
 
-    this.ua.on('newRTCSession', ({ originator, session: rtcSession }) => {
+    this.ua.on('newRTCSession', ({ originator, session: rtcSession, request: rtcRequest }) => {
       if (!this || !this.mounted) {
         return;
       }
@@ -228,11 +231,13 @@ export default class SipProvider extends React.Component {
         this.setState({
           callDirection: CALL_DIRECTION_OUTGOING,
           callStatus: CALL_STATUS_STARTING,
+          callCounterpart: rtcRequest.to.toString(),
         });
       } else if (originator === 'remote') {
         this.setState({
           callDirection: CALL_DIRECTION_INCOMING,
           callStatus: CALL_STATUS_STARTING,
+          callCounterpart: rtcRequest.from.toString(),
         });
       }
 
@@ -257,6 +262,7 @@ export default class SipProvider extends React.Component {
           rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
           callDirection: null,
+          callCounterpart: null,
         });
       });
 
@@ -268,6 +274,7 @@ export default class SipProvider extends React.Component {
           rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
           callDirection: null,
+          callCounterpart: null,
         });
       });
 
@@ -293,7 +300,7 @@ export default class SipProvider extends React.Component {
       }
     });
 
-    const extraHeadersRegister = this.props.extraHeaders.register;
+    const extraHeadersRegister = this.props.extraHeaders.register || [];
     if (extraHeadersRegister.length) {
       this.ua.registrator().setExtraHeaders(extraHeadersRegister);
     }
