@@ -229,19 +229,19 @@ export default class SipProvider extends React.Component {
       // identify call direction
       if (originator === 'local') {
         const foundUri = rtcRequest.to.toString();
-        const delimiter = foundUri.indexOf(';') || null;
+        const delimiterPosition = foundUri.indexOf(';') || null;
         this.setState({
           callDirection: CALL_DIRECTION_OUTGOING,
           callStatus: CALL_STATUS_STARTING,
-          callCounterpart: foundUri.substring(0, delimiter) || foundUri,
+          callCounterpart: foundUri.substring(0, delimiterPosition) || foundUri,
         });
       } else if (originator === 'remote') {
         const foundUri = rtcRequest.from.toString();
-        const delimiter = foundUri.indexOf(';') || null;
+        const delimiterPosition = foundUri.indexOf(';') || null;
         this.setState({
           callDirection: CALL_DIRECTION_INCOMING,
           callStatus: CALL_STATUS_STARTING,
-          callCounterpart: foundUri.substring(0, delimiter) || foundUri,
+          callCounterpart: foundUri.substring(0, delimiterPosition) || foundUri,
         });
       }
 
