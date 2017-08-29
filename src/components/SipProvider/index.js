@@ -287,9 +287,7 @@ export default class SipProvider extends React.Component {
           return;
         }
 
-        this.remoteAudio.src = window.URL.createObjectURL(
-          rtcSession.connection.getRemoteStreams()[0],
-        );
+        this.remoteAudio.srcObject = rtcSession.connection.getRemoteStreams()[0];
         this.remoteAudio.play();
         this.setState({ callStatus: CALL_STATUS_ACTIVE });
       });
