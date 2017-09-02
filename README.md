@@ -59,6 +59,7 @@ sipUnregister: PropTypes.func
 sipAnswer: PropTypes.func
 callStatus: PropTypes.string
 callDirection: PropTypes.string
+callCounterpart: PropTypes.string
 ```
 
 `sipStatus` displays SIP connection status and can be: `DISCONNECTED, CONNECTING, CONNECTED, REGISTERED, ERROR`
@@ -66,6 +67,8 @@ callDirection: PropTypes.string
 `callStatus` represents the status of the actual established voice call/session, and can be: `IDLE, ACTIVE, STARTING, STOPPING`
 
 `callDirection` indicates the direction of the call: `INCOMING, OUTGOING`
+
+`callCounterpart` represents the call _destination_ in case of outbound call and _caller_ in inbound calls
 
 _(These can be used to more intuitively display components)_
 
