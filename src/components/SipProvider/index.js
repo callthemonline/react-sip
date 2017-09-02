@@ -37,18 +37,20 @@ export default class SipProvider extends React.Component {
     sipAnswer: PropTypes.func,
     callStatus: PropTypes.string,
     callDirection: PropTypes.string,
+    callCounterpart: PropTypes.string,
   };
 
   static propTypes = {
     host: PropTypes.string.isRequired,
     port: PropTypes.string.isRequired,
-    user: PropTypes.string.isRequired,
-    password: PropTypes.string.isRequired,
+    user: PropTypes.string,
+    uri: PropTypes.string,
+    password: PropTypes.string,
     iceServers: PropTypes.arrayOf(PropTypes.object),
     debug: PropTypes.bool,
     autoAnswer: PropTypes.bool,
     sessionTimersExpires: PropTypes.number,
-    extraHeaders: PropTypes.arrayOf(PropTypes.string),
+    extraHeaders: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
     autoRegister: PropTypes.bool,
     children: PropTypes.node,
   };
@@ -59,8 +61,9 @@ export default class SipProvider extends React.Component {
     autoAnswer: false,
     sessionTimersExpires: 120,
     autoRegister: true,
-    extraHeaders: [],
+    extraHeaders: { register: [], invite: [] },
     children: null,
+    uri: null,
   };
 
   constructor() {
@@ -71,6 +74,7 @@ export default class SipProvider extends React.Component {
       errorLog: [],
       callStatus: null,
       callDirection: null,
+      callCounterpart: null,
     };
 
     this.mounted = false;
@@ -90,11 +94,12 @@ export default class SipProvider extends React.Component {
       sipAnswer: this.answerCall,
       callStatus: this.state.callStatus,
       callDirection: this.state.callDirection,
+      callCounterpart: this.state.callCounterpart,
     };
   }
 
   componentDidMount() {
-    const { host, port, user, password, debug, autoAnswer, autoRegister } = this.props;
+    const { host, port, user, uri, password, debug, autoAnswer, autoRegister } = this.props;
 
     // http://jssip.net/documentation/3.0.x/api/debug/
     if (debug) {
@@ -113,7 +118,7 @@ export default class SipProvider extends React.Component {
 
     try {
       this.ua = new JsSIP.UA({
-        uri: `sip:${user}@${host}`,
+        uri: uri || `sip:${user}@${host}`,
         password,
         sockets: [socket],
         register: autoRegister,
@@ -216,21 +221,27 @@ export default class SipProvider extends React.Component {
       });
     });
 
-    this.ua.on('newRTCSession', ({ originator, session: rtcSession }) => {
+    this.ua.on('newRTCSession', ({ originator, session: rtcSession, request: rtcRequest }) => {
       if (!this || !this.mounted) {
         return;
       }
 
       // identify call direction
       if (originator === 'local') {
+        const foundUri = rtcRequest.to.toString();
+        const delimiterPosition = foundUri.indexOf(';') || null;
         this.setState({
           callDirection: CALL_DIRECTION_OUTGOING,
           callStatus: CALL_STATUS_STARTING,
+          callCounterpart: foundUri.substring(0, delimiterPosition) || foundUri,
         });
       } else if (originator === 'remote') {
+        const foundUri = rtcRequest.from.toString();
+        const delimiterPosition = foundUri.indexOf(';') || null;
         this.setState({
           callDirection: CALL_DIRECTION_INCOMING,
           callStatus: CALL_STATUS_STARTING,
+          callCounterpart: foundUri.substring(0, delimiterPosition) || foundUri,
         });
       }
 
@@ -255,6 +266,7 @@ export default class SipProvider extends React.Component {
           rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
           callDirection: null,
+          callCounterpart: null,
         });
       });
 
@@ -266,6 +278,7 @@ export default class SipProvider extends React.Component {
           rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
           callDirection: null,
+          callCounterpart: null,
         });
       });
 
@@ -274,9 +287,7 @@ export default class SipProvider extends React.Component {
           return;
         }
 
-        this.remoteAudio.src = window.URL.createObjectURL(
-          rtcSession.connection.getRemoteStreams()[0],
-        );
+        this.remoteAudio.srcObject = rtcSession.connection.getRemoteStreams()[0];
         this.remoteAudio.play();
         this.setState({ callStatus: CALL_STATUS_ACTIVE });
       });
@@ -291,6 +302,10 @@ export default class SipProvider extends React.Component {
       }
     });
 
+    const extraHeadersRegister = this.props.extraHeaders.register || [];
+    if (extraHeadersRegister.length) {
+      this.ua.registrator().setExtraHeaders(extraHeadersRegister);
+    }
     this.ua.start();
   }
 
@@ -329,10 +344,11 @@ export default class SipProvider extends React.Component {
 
   startCall = (destination) => {
     // call start
-    const { iceServers, sessionTimersExpires, extraHeaders } = this.props;
+    const { iceServers, sessionTimersExpires } = this.props;
+    const extraHeadersInvite = this.props.extraHeaders.invite;
 
     const options = {
-      extraHeaders,
+      extraHeaders: extraHeadersInvite,
       mediaConstraints: { audio: true, video: false },
       pcConfig: {
         iceServers,
