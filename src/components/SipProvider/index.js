@@ -99,7 +99,9 @@ export default class SipProvider extends React.Component {
   }
 
   componentDidMount() {
-    const { host, port, user, uri, password, debug, autoAnswer, autoRegister } = this.props;
+    const {
+      host, port, user, uri, password, debug, autoAnswer, autoRegister,
+    } = this.props;
 
     // http://jssip.net/documentation/3.0.x/api/debug/
     if (debug) {
@@ -288,12 +290,12 @@ export default class SipProvider extends React.Component {
           return;
         }
 
-        this.remoteAudio.srcObject = rtcSession.connection.getRemoteStreams()[0];
+        [this.remoteAudio.srcObject] = rtcSession.connection.getRemoteStreams();
         // const played = this.remoteAudio.play();
         const played = this.remoteAudio.play();
 
         if (typeof played !== 'undefined') {
-          played.catch(() => { }).then(() => {
+          played.catch(() => {}).then(() => {
             setTimeout(() => {
               this.remoteAudio.play();
             }, 2000);
@@ -302,7 +304,7 @@ export default class SipProvider extends React.Component {
           return;
         }
 
-        setTimeout(function () {
+        setTimeout(() => {
           this.remoteAudio.play();
         }, 2000);
 
