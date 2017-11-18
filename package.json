@@ -16,7 +16,11 @@
     "type": "git",
     "url": "git+ssh://git@github.com/callthemonline/react-sip.git"
   },
-  "keywords": ["react", "sip", "jssip"],
+  "keywords": [
+    "react",
+    "sip",
+    "jssip"
+  ],
   "author": "callthem online (https://callthem.online/)",
   "license": "MIT",
   "bugs": {
@@ -24,7 +28,7 @@
   },
   "homepage": "https://github.com/callthemonline/react-sip#readme",
   "dependencies": {
-    "jssip": "3.0.13",
+    "jssip": "3.0.18",
     "prop-types": "^15.6.0"
   },
   "peerDependencies": {
@@ -35,6 +39,7 @@
     "babel-cli": "^6.26.0",
     "babel-eslint": "^8.0.2",
     "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
     "eslint": "^4.11.0",
@@ -47,7 +52,14 @@
     "react": "^16.1.1"
   },
   "babel": {
-    "plugins": ["transform-es2015-modules-commonjs", "transform-class-properties"],
-    "presets": ["es2015", "react"]
+    "plugins": [
+      "transform-es2015-modules-commonjs",
+      "transform-class-properties",
+      "transform-object-rest-spread"
+    ],
+    "presets": [
+      "es2015",
+      "react"
+    ]
   }
 }

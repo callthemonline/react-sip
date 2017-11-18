@@ -77,9 +77,9 @@ Child components get access to this context:
   registerSip: PropTypes.func,
   unregisterSip: PropTypes.func,
 
+  answerCall: PropTypes.func,
   startCall: PropTypes.func,
   stopCall: PropTypes.func,
-  answerCall: PropTypes.func,
 }
 ```
 
@@ -126,8 +126,8 @@ When `autoRegister` is set to `false`, you can call `sipRegister()` and `sipUnre
 
 To make calls, simply use these functions:
 
-* `startCall(destination)`
 * `answerCall()`
+* `startCall(destination)`
 * `stopCall()`
 
 The value for `destination` argument equals to the target SIP user without the host part (e.g. `+441234567890` or `bob`).
