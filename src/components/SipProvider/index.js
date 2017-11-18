@@ -14,7 +14,7 @@ import {
   CALL_STATUS_STOPPING,
   CALL_DIRECTION_INCOMING,
   CALL_DIRECTION_OUTGOING,
-} from '../../lib/statuses';
+} from '../../lib/enums';
 
 let logger;
 const dummyLogger = {};

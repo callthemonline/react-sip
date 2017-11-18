@@ -1,4 +1,4 @@
 import SipProvider from './components/SipProvider';
 
-export * from './lib/statuses';
+export * from './lib/enums';
 export { SipProvider };
