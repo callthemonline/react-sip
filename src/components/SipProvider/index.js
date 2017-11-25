@@ -1,7 +1,8 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import { bool, func, node, number, string } from 'prop-types';
 import JsSIP from 'jssip';
 import dummyLogger from '../../lib/dummyLogger';
+import { callType, extraHeadersType, iceServersType, sipType } from '../../lib/types';
 
 import {
   SIP_STATUS_DISCONNECTED,
@@ -25,51 +26,29 @@ import {
 
 export default class SipProvider extends React.Component {
   static childContextTypes = {
-    sip: PropTypes.shape({
-      status: PropTypes.string,
-      errorType: PropTypes.string,
-      errorMessage: PropTypes.string,
+    sip: sipType,
+    call: callType,
+    registerSip: func,
+    unregisterSip: func,
 
-      host: PropTypes.string,
-      port: PropTypes.number,
-      user: PropTypes.string,
-      password: PropTypes.string,
-      autoRegister: PropTypes.bool,
-      autoAnswer: PropTypes.bool,
-      sessionTimersExpires: PropTypes.number,
-      extraHeaders: PropTypes.obj,
-      iceServers: PropTypes.obj,
-      debug: PropTypes.bool,
-    }),
-
-    call: PropTypes.shape({
-      id: PropTypes.string,
-      status: PropTypes.string,
-      direction: PropTypes.string,
-      counterpart: PropTypes.string,
-    }),
-
-    registerSip: PropTypes.func,
-    unregisterSip: PropTypes.func,
-
-    answerCall: PropTypes.func,
-    startCall: PropTypes.func,
-    stopCall: PropTypes.func,
+    answerCall: func,
+    startCall: func,
+    stopCall: func,
   };
 
   static propTypes = {
-    host: PropTypes.string,
-    port: PropTypes.number,
-    user: PropTypes.string,
-    password: PropTypes.string,
-    autoRegister: PropTypes.bool,
-    autoAnswer: PropTypes.bool,
-    sessionTimersExpires: PropTypes.number,
-    extraHeaders: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
-    iceServers: PropTypes.arrayOf(PropTypes.object),
-    debug: PropTypes.bool,
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    autoRegister: bool,
+    autoAnswer: bool,
+    sessionTimersExpires: number,
+    extraHeaders: extraHeadersType,
+    iceServers: iceServersType,
+    debug: bool,
 
-    children: PropTypes.node,
+    children: node,
   };
 
   static defaultProps = {
