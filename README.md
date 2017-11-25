@@ -50,29 +50,8 @@ Child components get access to this context:
 
 ```js
 {
-  sip: PropTypes.shape({
-    status: PropTypes.string,
-    errorType: PropTypes.string,
-    errorMessage: PropTypes.string,
-
-    host: PropTypes.string,
-    port: PropTypes.number,
-    user: PropTypes.string,
-    password: PropTypes.string,
-    autoRegister: PropTypes.bool,
-    autoAnswer: PropTypes.bool,
-    sessionTimersExpires: PropTypes.number,
-    extraHeaders: PropTypes.obj,
-    iceServers: PropTypes.obj,
-    debug: PropTypes.bool,
-  }),
-
-  call: PropTypes.shape({
-    id: PropTypes.string,
-    status: PropTypes.string,
-    direction: PropTypes.string,
-    counterpart: PropTypes.string,
-  }),
+  sip: sipType,
+  call: callType,
 
   registerSip: PropTypes.func,
   unregisterSip: PropTypes.func,
@@ -82,6 +61,9 @@ Child components get access to this context:
   stopCall: PropTypes.func,
 }
 ```
+
+See [lib/types.js](./src/lib/types.js) for details of what’s included in `sipType` and `callType`.
+
 
 ### sip
 
@@ -98,6 +80,9 @@ Child components get access to this context:
 * `'sipErrorType/CONFIGURATION'`
 * `'sipErrorType/CONNECTION'`
 * `'sipErrorType/REGISTRATION'`
+
+`sip.host`, `sip.port`, `sip.user`, `...` – `<SipProvider />` props.
+
 
 ### call
 
