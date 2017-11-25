@@ -13,6 +13,6 @@ Things to take into account while refactoring:
 
 *   The shape of context has changed, so your child components that consume `<SipProvider/>`’s info or trigger callbacks require revision.
 *   `<SipProvider/>`’s props are now passed down the tree as context to make UI easier to implement. If you're passing them to child components yourself, you can now remove this custom code in favour of what `<SipProvider/>` puts into context.
-*   When you specify `contextTypes` in your child components, you can now `import { sipType, callType } from 'react-sip'` to make your code shorter (see [lib/types.js](https://github.com/callthemonline/react-sip/blob/master/src/lib/types.js)).
+*   When you specify `contextTypes` in your child components, you can now `import { sipType, callType } from 'react-sip'` to make your code shorter (see [lib/types.js](./src/lib/types.js)).
 *   `<SipProvider/>`’s `port` prop type has changed from `string` to `number`.
 *   previously undocumented experimental `uri` prop was removed
