@@ -1,6 +1,6 @@
 {
   "name": "react-sip",
-  "version": "0.5.0-rc.5",
+  "version": "0.5.0-rc.6",
   "description": "React wrapper for jssip",
   "main": "./dist/index.js",
   "scripts": {
@@ -9,18 +9,13 @@
     "format:js": "prettier-eslint \"./src/**/*.js\" --write",
     "lint:js": "eslint src",
     "lint": "npm run lint:js",
-    "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/callthemonline/react-sip.git"
   },
-  "keywords": [
-    "react",
-    "sip",
-    "jssip"
-  ],
+  "keywords": ["react", "sip", "jssip"],
   "author": "callthem online (https://callthem.online/)",
   "license": "MIT",
   "bugs": {
