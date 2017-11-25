@@ -1,44 +1,44 @@
 React SIP
-=========
+===
 
 React wrapper for [jssip](https://github.com/versatica/JsSIP).
 
+
 Installation
------
+---
 
 ```bash
 npm install react-sip
 ```
 
+There is no need to install `jssip` as it is a dependency of `react-sip`.
+
 
 Usage
------
+---
 
 ```js
-// src/index.js
-import { SipProvider } from './components/SipProvider';
-import App from './components/App';
-
-// define sipHost, sipPort, sipUser, sipPassword
-// optional: autoRegister, sipDebug, iceServerUrls, extraHeaders, sessionTimersExpires, autoAnswer
+import { SipProvider } from 'react-sip';
+import App from './components/App';  
 
 ReactDOM.render(
   <SipProvider
-    host={sipHost}
-    port={sipPort}
-    user={sipUser}
-    password={sipPassword}
-    autoRegister={sipRegister} // enable/disable REGISTER, default: true, see jssip.ua option `register`
-    debug={sipDebug} // true / false
-    autoAnswer={autoAnswer} // automatically answer incoming sessions, default: false
-    sessionTimersExpires={sessionTimersExpires} // Min-SE: value, default set to 120, not 90
-    debug={debug} // true / false
-    extraHeaders={[ 'X-Foo: foo', 'X-Bar: bar' ]} // optional: extra headers
+    host="sip.example.com"
+    port={7443}
+    user="alice"
+    password={sipPassword} // usually required (e.g. from ENV or props)
+    autoRegister={true} // true by default, see jssip.UA option register
+    autoAnswer={false} // automatically answer incoming calls; false by default
+    sessionTimersExpires={120} // value for Session-Expires header; 120 by default
+    extraHeaders={{ // optional sip headers to send
+      register: ['X-Foo: foo', 'X-Bar: bar'],
+      invite: ['X-Foo: foo2', 'X-Bar: bar2']
+    }}
     iceServers={[ // optional
-      {
-        urls: iceServerUrls,
-      },
+      { urls: ['stun:a.example.com', 'stun:b.example.com'] },
+      { urls: 'turn:example.com', username: 'foo', credential: '1234' }
     ]}
+    debug={false} // whether to output events to console; false by default
   >
     <App />
   </SipProvider>
@@ -48,109 +48,107 @@ ReactDOM.render(
 
 Child components get access to this context:
 
-```yaml
-sipId: PropTypes.string
-sipStatus: PropTypes.string
-sipErrorLog: PropTypes.array
-sipStart: PropTypes.func
-sipStop: PropTypes.func
-sipRegister: PropTypes.func
-sipUnregister: PropTypes.func
-sipAnswer: PropTypes.func
-callStatus: PropTypes.string
-callDirection: PropTypes.string
-callCounterpart: PropTypes.string
+```js
+{
+  sip: PropTypes.shape({
+    status: PropTypes.string,
+    errorType: PropTypes.string,
+    errorMessage: PropTypes.string,
+
+    host: PropTypes.string,
+    port: PropTypes.number,
+    user: PropTypes.string,
+    password: PropTypes.string,
+    autoRegister: PropTypes.bool,
+    autoAnswer: PropTypes.bool,
+    sessionTimersExpires: PropTypes.number,
+    extraHeaders: PropTypes.obj,
+    iceServers: PropTypes.obj,
+    debug: PropTypes.bool,
+  }),
+
+  call: PropTypes.shape({
+    id: PropTypes.string,
+    status: PropTypes.string,
+    direction: PropTypes.string,
+    counterpart: PropTypes.string,
+  }),
+
+  registerSip: PropTypes.func,
+  unregisterSip: PropTypes.func,
+
+  answerCall: PropTypes.func,
+  startCall: PropTypes.func,
+  stopCall: PropTypes.func,
+}
 ```
 
-`sipStatus` displays SIP connection status and can be: `DISCONNECTED, CONNECTING, CONNECTED, REGISTERED, ERROR`
+### sip
 
-`callStatus` represents the status of the actual established voice call/session, and can be: `IDLE, ACTIVE, STARTING, STOPPING`
+`sip.status` represents SIP connection status and equals to one of these values:
 
-`callDirection` indicates the direction of the call: `INCOMING, OUTGOING`
+* `'sipStatus/DISCONNECTED'` when `host`, `port` or `user` is not defined
+* `'sipStatus/CONNECTING'`
+* `'sipStatus/CONNECTED'`
+* `'sipStatus/REGISTERED'` after calling `registerSip` or after `'sipStatus/CONNECTED'` when `autoRegister` is true
+* `'sipStatus/ERROR'` in case of configuration, connection or registration problems
 
-`callCounterpart` represents the call _destination_ in case of outbound call and _caller_ in inbound calls
+`sip.errorType`:
 
-_(These can be used to more intuitively display components)_
+* `'sipErrorType/CONFIGURATION'`
+* `'sipErrorType/CONNECTION'`
+* `'sipErrorType/REGISTRATION'`
 
-`sipStart(destination), sipStop(), sipAnswer()` are functions to manage the call.
+### call
 
-You can also `sipRegister()` and `sipUnregister()` manually when `autoRegister` is set to `false` for advanced registration scenarios.
+`call.id` is a unique session id of the actual established voice call; `undefined` between calls
 
-Sample context usage
+`call.status` represents the status of the call:
+
+* `'callStatus/IDLE'` between calls (even when disconnected)
+* `'callStatus/STARTING'` active incoming or outgoing call request
+* `'callStatus/ACTIVE'` during ongoing call
+* `'callStatus/STOPPING'` during call cancelation request
+
+`call.direction` indicates the direction of the ongoing call:
+
+* `null` between calls
+* `'callDirection/INCOMING'`
+* `'callDirection/OUTGOING'`
+
+`call.counterpart` represents the call _destination_ in case of outgoing call and _caller_ for
+incoming calls.
+The format depends on the configuration of the SIP server (e.g. `"bob" <+441234567890@sip.example.com>`, `+441234567890@sip.example.com` or `bob@sip.example.com`).
+
+### methods
+
+When `autoRegister` is set to `false`, you can call `sipRegister()` and `sipUnregister()` manually for advanced registration scenarios.
+
+To make calls, simply use these functions:
+
+* `answerCall()`
+* `startCall(destination)`
+* `stopCall()`
+
+The value for `destination` argument equals to the target SIP user without the host part (e.g. `+441234567890` or `bob`).
+The omitted host part is equal to host you’ve defined in `SipProvider` props (e.g. `sip.example.com`).
+
 ---
 
-<details>
+The values for `sip.status`, `sip.errorType`, `call.status` and `call.direction` can be imported as constants to make typos easier to detect:
 
 ```js
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import styled from 'styled-components';
-import RaisedButton from 'material-ui/RaisedButton';
-import TextField from 'material-ui/TextField';
-import { withState, compose, withHandlers, getContext, withPropsOnChange } from 'recompose';
-import { CALL_STATUS_IDLE,
-  CALL_STATUS_STARTING,
-  CALL_STATUS_ACTIVE,
-  CALL_STATUS_STOPPING,
+import {
+  SIP_STATUS_DISCONNECTED,
+//SIP_STATUS_...,
+
+  CALL_STATUS_IDLE,
+//CALL_STATUS_...,
+
+  SIP_ERROR_TYPE_CONFIGURATION,
+//SIP_ERROR_TYPE_...,
+
   CALL_DIRECTION_INCOMING,
-  CALL_DIRECTION_OUTGOING } from 'react-sip';
-
-const Wrapper = styled.div`background:yellow`;
-const InputContainer = styled.div`background:green`;
-const ButtonContainer = styled.div`background:red`;
-
-const DialController = ({
-  onStartButtonClick,
-  onStopButtonClick,
-  onAnswerButtonClick,
-  startButtonDisabled,
-  stopButtonDisabled,
-  answerButtonDisabled,
-  destinationText,
-  onDestinationTextChange,
-}) => (
-  <Wrapper >
-<h1>Zvonilka.</h1>
-<InputContainer>
-<TextField
-      hintText="Number"
-      value = {destinationText}
-      onChange = {onDestinationTextChange}
-    />
-</InputContainer>
-<ButtonContainer>
-
-<RaisedButton label="Call" disabled={startButtonDisabled} onClick={onStartButtonClick}/>
-<RaisedButton label="Answer" disabled={answerButtonDisabled} onClick={onAnswerButtonClick}/>
-<RaisedButton label="Stop" disabled={stopButtonDisabled} onClick={onStopButtonClick}/>
-
-</ButtonContainer>
-</Wrapper>
-);
-
-export default compose (
-  withState('destinationText', 'setDestinationText', '42'),
-  getContext({
-    sipStart: PropTypes.func,
-    sipAnswer: PropTypes.func,
-    sipStop: PropTypes.func,
-    callStatus: PropTypes.string,
-    callDirection: PropTypes.string,
-  }),
-  withPropsOnChange(
-    ['callStatus', 'callDirection'],
-    ({ callStatus, callDirection }) => ({
-      startButtonDisabled: callStatus != CALL_STATUS_IDLE,
-      stopButtonDisabled: callStatus != CALL_STATUS_ACTIVE && callStatus != CALL_STATUS_STARTING,
-      answerButtonDisabled: callStatus != CALL_STATUS_STARTING || callDirection != CALL_DIRECTION_INCOMING,
-    })
-),
-  withHandlers({
-    onDestinationTextChange: ({setDestinationText}) => (e) => setDestinationText(e.currentTarget.value),
-    onStopButtonClick: ({sipStop}) => (e) => sipStop(),
-    onStartButtonClick: ({sipStart, destinationText}) => (e) => sipStart(destinationText),
-    onAnswerButtonClick: ({sipAnswer}) => (e) => sipAnswer(),
-  }),
-)(DialController);
+  CALL_DIRECTION_OUTGOING,
+} from 'react-sip';
 ```
-</details>

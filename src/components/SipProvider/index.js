@@ -1,231 +1,364 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import { bool, func, node, number, string } from 'prop-types';
 import JsSIP from 'jssip';
+import dummyLogger from '../../lib/dummyLogger';
+import { callType, extraHeadersType, iceServersType, sipType } from '../../lib/types';
 
 import {
-  SIP_STATUS_CONNECTED,
   SIP_STATUS_DISCONNECTED,
   SIP_STATUS_CONNECTING,
+  SIP_STATUS_CONNECTED,
   SIP_STATUS_REGISTERED,
   SIP_STATUS_ERROR,
+  //
+  SIP_ERROR_TYPE_CONFIGURATION,
+  SIP_ERROR_TYPE_CONNECTION,
+  SIP_ERROR_TYPE_REGISTRATION,
+  //
   CALL_STATUS_IDLE,
   CALL_STATUS_STARTING,
   CALL_STATUS_ACTIVE,
   CALL_STATUS_STOPPING,
+  //
   CALL_DIRECTION_INCOMING,
   CALL_DIRECTION_OUTGOING,
-} from '../../lib/statuses';
-
-let logger;
-const dummyLogger = {};
-dummyLogger.log = () => {};
-dummyLogger.error = () => {};
-dummyLogger.warn = () => {};
-dummyLogger.debug = () => {};
-
-const contactToSipIdRegex = /[a-zA-Z0-9]+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*/;
+} from '../../lib/enums';
 
 export default class SipProvider extends React.Component {
   static childContextTypes = {
-    sipId: PropTypes.string,
-    sipStatus: PropTypes.string,
-    sipErrorLog: PropTypes.arrayOf(PropTypes.object),
-    sipStart: PropTypes.func,
-    sipStop: PropTypes.func,
-    sipRegister: PropTypes.func,
-    sipUnregister: PropTypes.func,
-    sipAnswer: PropTypes.func,
-    callStatus: PropTypes.string,
-    callDirection: PropTypes.string,
-    callCounterpart: PropTypes.string,
+    sip: sipType,
+    call: callType,
+    registerSip: func,
+    unregisterSip: func,
+
+    answerCall: func,
+    startCall: func,
+    stopCall: func,
   };
 
   static propTypes = {
-    host: PropTypes.string.isRequired,
-    port: PropTypes.string.isRequired,
-    user: PropTypes.string,
-    uri: PropTypes.string,
-    password: PropTypes.string,
-    iceServers: PropTypes.arrayOf(PropTypes.object),
-    debug: PropTypes.bool,
-    autoAnswer: PropTypes.bool,
-    sessionTimersExpires: PropTypes.number,
-    extraHeaders: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
-    autoRegister: PropTypes.bool,
-    children: PropTypes.node,
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    autoRegister: bool,
+    autoAnswer: bool,
+    sessionTimersExpires: number,
+    extraHeaders: extraHeadersType,
+    iceServers: iceServersType,
+    debug: bool,
+
+    children: node,
   };
 
   static defaultProps = {
-    iceServers: [],
-    debug: false,
+    host: null,
+    port: null,
+    user: null,
+    password: null,
+    autoRegister: true,
     autoAnswer: false,
     sessionTimersExpires: 120,
-    autoRegister: true,
     extraHeaders: { register: [], invite: [] },
+    iceServers: [],
+    debug: false,
+
     children: null,
-    uri: null,
   };
 
   constructor() {
     super();
     this.state = {
-      status: SIP_STATUS_DISCONNECTED,
+      sipStatus: SIP_STATUS_DISCONNECTED,
+      sipErrorType: null,
+      sipErrorMessage: null,
+
       rtcSession: null,
-      errorLog: [],
-      callStatus: null,
+      // errorLog: [],
+      callStatus: CALL_STATUS_IDLE,
       callDirection: null,
       callCounterpart: null,
     };
 
-    this.mounted = false;
     this.ua = null;
   }
 
   getChildContext() {
-    const contact = this.ua && this.ua.contact && this.ua.contact.toString();
-    const sipIdRegexResult = contactToSipIdRegex.exec(contact);
     return {
-      sipId: sipIdRegexResult ? sipIdRegexResult[0] : '',
-      sipStatus: this.state.status,
-      sipStart: this.startCall,
-      sipStop: this.stopCall,
-      sipRegister: this.registerSip,
-      sipUnregister: this.unregisterSip,
-      sipAnswer: this.answerCall,
-      callStatus: this.state.callStatus,
-      callDirection: this.state.callDirection,
-      callCounterpart: this.state.callCounterpart,
+      sip: {
+        ...this.props,
+        status: this.state.sipStatus,
+        errorType: this.state.sipErrorType,
+        errorMessage: this.state.sipErrorMessage,
+      },
+      call: {
+        id: '??',
+        status: this.state.callStatus,
+        direction: this.state.callDirection,
+        counterpart: this.state.callCounterpart,
+      },
+      registerSip: this.registerSip,
+      unregisterSip: this.unregisterSip,
+
+      answerCall: this.answerCall,
+      startCall: this.startCall,
+      stopCall: this.stopCall,
     };
   }
 
   componentDidMount() {
-    const {
-      host, port, user, uri, password, debug, autoAnswer, autoRegister,
-    } = this.props;
-
-    // http://jssip.net/documentation/3.0.x/api/debug/
-    if (debug) {
-      JsSIP.debug.enable('JsSIP:*');
-      logger = console;
-    } else {
-      JsSIP.debug.disable('JsSIP:*');
-      logger = dummyLogger;
-    }
+    // TODO check against having two instances of SipProvider in one app, which is not allowed
 
     this.remoteAudio = window.document.createElement('audio');
-
     window.document.body.appendChild(this.remoteAudio);
 
-    this.mounted = true;
-    const socket = new JsSIP.WebSocketInterface(`wss://${host}:${port}`);
+    this.reconfigureDebug();
+    this.reinitializeJsSIP();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.debug !== prevProps.debug) {
+      this.reconfigureDebug();
+    }
+    if (
+      this.props.host !== prevProps.host ||
+      this.props.port !== prevProps.port ||
+      this.props.user !== prevProps.user ||
+      this.props.password !== prevProps.password ||
+      this.props.autoRegister !== prevProps.autoRegister
+    ) {
+      this.reinitializeJsSIP();
+    }
+  }
+
+  componentWillUnmount() {
+    delete this.remoteAudio;
+    if (this.ua) {
+      this.ua.stop();
+      this.ua = null;
+    }
+  }
+
+  registerSip = () => {
+    if (this.props.autoRegister) {
+      throw new Error('Calling registerSip is not allowed when autoRegister === true');
+    }
+    if (this.state.sipStatus !== SIP_STATUS_CONNECTED) {
+      throw new Error(`Calling registerSip is not allowed when sip status is ${this.state.sipStatus} (expected ${
+        SIP_STATUS_CONNECTED
+      })`);
+    }
+    return this.ua.register();
+  };
+
+  unregisterSip = () => {
+    if (this.props.autoRegister) {
+      throw new Error('Calling registerSip is not allowed when autoRegister === true');
+    }
+    if (this.state.sipStatus !== SIP_STATUS_REGISTERED) {
+      throw new Error(`Calling unregisterSip is not allowed when sip status is ${
+        this.state.sipStatus
+      } (expected ${SIP_STATUS_CONNECTED})`);
+    }
+    return this.ua.unregister();
+  };
+
+  answerCall = () => {
+    if (
+      this.state.callStatus !== CALL_STATUS_STARTING ||
+      this.state.callDirection !== CALL_DIRECTION_INCOMING
+    ) {
+      throw new Error(`Calling answerCall() is not allowed when call status is ${
+        this.state.callStatus
+      } and call direction is ${this.state.callDirection}  (expected ${
+        CALL_STATUS_STARTING
+      } and ${CALL_DIRECTION_INCOMING})`);
+    }
+
+    this.state.rtcSession.answer({
+      mediaConstraints: {
+        audio: true,
+        video: false,
+      },
+      pcConfig: {
+        iceServers: this.props.iceServers,
+      },
+    });
+  };
+
+  startCall = (destination) => {
+    if (!destination) {
+      throw new Error(`Destination must be defined (${destination} given)`);
+    }
+    if (
+      this.state.sipStatus !== SIP_STATUS_CONNECTED &&
+      this.state.sipStatus !== SIP_STATUS_REGISTERED
+    ) {
+      throw new Error(`Calling startCall() is not allowed when sip status is ${this.state.sipStatus} (expected ${
+        SIP_STATUS_CONNECTED
+      } or ${SIP_STATUS_REGISTERED})`);
+    }
+
+    if (this.state.callStatus !== CALL_STATUS_IDLE) {
+      throw new Error(`Calling startCall() is not allowed when call status is ${
+        this.state.callStatus
+      } (expected ${CALL_STATUS_IDLE})`);
+    }
+
+    const { iceServers, sessionTimersExpires } = this.props;
+    const extraHeaders = this.props.extraHeaders.invite;
+
+    const options = {
+      extraHeaders,
+      mediaConstraints: { audio: true, video: false },
+      pcConfig: {
+        iceServers,
+      },
+      sessionTimersExpires,
+    };
+
+    this.ua.call(destination, options);
+    this.setState({ callStatus: CALL_STATUS_STARTING });
+  };
+
+  stopCall = () => {
+    this.setState({ callStatus: CALL_STATUS_STOPPING });
+    this.ua.terminateSessions();
+  };
+
+  reconfigureDebug() {
+    const { debug } = this.props;
+
+    if (debug) {
+      JsSIP.debug.enable('JsSIP:*');
+      this.logger = console;
+    } else {
+      JsSIP.debug.disable('JsSIP:*');
+      this.logger = dummyLogger;
+    }
+  }
+
+  reinitializeJsSIP() {
+    if (this.ua) {
+      this.ua.stop();
+      this.ua = null;
+    }
+
+    const {
+      host, port, user, password, autoRegister,
+    } = this.props;
+
+    if (!host || !port || !user) {
+      this.setState({
+        sipStatus: SIP_STATUS_DISCONNECTED,
+        sipErrorType: null,
+        sipErrorMessage: null,
+      });
+      return;
+    }
 
     try {
+      const socket = new JsSIP.WebSocketInterface(`wss://${host}:${port}`);
       this.ua = new JsSIP.UA({
-        uri: uri || `sip:${user}@${host}`,
+        uri: `sip:${user}@${host}`,
         password,
         sockets: [socket],
         register: autoRegister,
       });
     } catch (error) {
-      logger.debug('Error', error.message, error);
+      this.logger.debug('Error', error.message, error);
       this.onMount(function callback() {
         this.setState({
-          status: SIP_STATUS_ERROR,
-          errorLog: [
-            ...this.state.errorLog,
-            {
-              message: error.message,
-              time: new Date(),
-            },
-          ],
+          sipStatus: SIP_STATUS_ERROR,
+          sipErrorType: SIP_ERROR_TYPE_CONFIGURATION,
+          sipErrorMessage: error.message,
         });
       });
+      return;
     }
 
-    this.ua.on('connecting', () => {
-      logger.debug('UA "connecting" event');
-      if (!this.mounted) {
+    const { ua } = this;
+    ua.on('connecting', () => {
+      this.logger.debug('UA "connecting" event');
+      if (this.ua !== ua) {
         return;
       }
       this.setState({
-        status: SIP_STATUS_CONNECTING,
+        sipStatus: SIP_STATUS_CONNECTING,
+        sipErrorType: null,
+        sipErrorMessage: null,
       });
     });
 
-    this.ua.on('connected', () => {
-      logger.debug('UA "connected" event');
-      if (!this.mounted) {
+    ua.on('connected', () => {
+      this.logger.debug('UA "connected" event');
+      if (this.ua !== ua) {
         return;
       }
       this.setState({
-        status: SIP_STATUS_CONNECTED,
+        sipStatus: SIP_STATUS_CONNECTED,
+        sipErrorType: null,
+        sipErrorMessage: null,
+      });
+    });
+
+    ua.on('disconnected', () => {
+      this.logger.debug('UA "disconnected" event');
+      if (this.ua !== ua) {
+        return;
+      }
+      this.setState({
+        sipStatus: SIP_STATUS_ERROR,
+        sipErrorType: SIP_ERROR_TYPE_CONNECTION,
+        sipErrorMessage: 'disconnected',
+      });
+    });
+
+    ua.on('registered', (data) => {
+      this.logger.debug('UA "registered" event', data);
+      if (this.ua !== ua) {
+        return;
+      }
+      this.setState({
+        sipStatus: SIP_STATUS_REGISTERED,
         callStatus: CALL_STATUS_IDLE,
       });
     });
 
-    this.ua.on('disconnected', () => {
-      logger.debug('UA "disconnected" event');
-      if (!this.mounted) {
+    ua.on('unregistered', () => {
+      this.logger.debug('UA "unregistered" event');
+      if (this.ua !== ua) {
         return;
       }
-      this.setState({ status: SIP_STATUS_DISCONNECTED });
-    });
-
-    this.ua.on('registered', (data) => {
-      logger.debug('UA "registered" event', data);
-      if (!this.mounted) {
-        return;
-      }
-      this.setState({
-        status: SIP_STATUS_REGISTERED,
-        callStatus: CALL_STATUS_IDLE,
-      });
-    });
-
-    this.ua.on('unregistered', () => {
-      logger.debug('UA "unregistered" event');
-      if (!this.mounted) {
-        return;
-      }
-      if (this.ua.isConnected()) {
+      if (ua.isConnected()) {
         this.setState({
-          status: SIP_STATUS_CONNECTED,
+          sipStatus: SIP_STATUS_CONNECTED,
           callStatus: null,
           callDirection: null,
         });
       } else {
         this.setState({
-          status: SIP_STATUS_DISCONNECTED,
+          sipStatus: SIP_STATUS_DISCONNECTED,
           callStatus: null,
           callDirection: null,
         });
       }
     });
 
-    this.ua.on('registrationFailed', (data) => {
-      logger.debug('UA "registrationFailed" event');
-      if (!this.mounted) {
+    ua.on('registrationFailed', (data) => {
+      this.logger.debug('UA "registrationFailed" event');
+      if (this.ua !== ua) {
         return;
       }
-      if (this.ua.isConnected()) {
-        this.setState({ status: 'connected' });
-      } else {
-        this.setState({ status: 'disconnected' });
-      }
       this.setState({
-        status: this.ua.isConnected() ? SIP_STATUS_CONNECTED : SIP_STATUS_DISCONNECTED,
-        errorLog: [
-          ...this.state.errorLog,
-          {
-            message: data.cause,
-            time: new Date(),
-          },
-        ],
+        sipStatus: SIP_STATUS_ERROR,
+        sipErrorType: SIP_ERROR_TYPE_REGISTRATION,
+        sipErrorMessage: data,
       });
     });
 
-    this.ua.on('newRTCSession', ({ originator, session: rtcSession, request: rtcRequest }) => {
-      if (!this || !this.mounted) {
+    ua.on('newRTCSession', ({ originator, session: rtcSession, request: rtcRequest }) => {
+      if (!this || this.ua !== ua) {
         return;
       }
 
@@ -252,7 +385,7 @@ export default class SipProvider extends React.Component {
 
       // Avoid if busy or other incoming
       if (rtcSessionInState) {
-        logger.debug('incoming call replied with 486 "Busy Here"');
+        this.logger.debug('incoming call replied with 486 "Busy Here"');
         rtcSession.terminate({
           status_code: 486,
           reason_phrase: 'Busy Here',
@@ -262,9 +395,10 @@ export default class SipProvider extends React.Component {
 
       this.setState({ rtcSession });
       rtcSession.on('failed', () => {
-        if (!this.mounted) {
+        if (this.ua !== ua) {
           return;
         }
+
         this.setState({
           rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
@@ -274,9 +408,10 @@ export default class SipProvider extends React.Component {
       });
 
       rtcSession.on('ended', () => {
-        if (!this.mounted) {
+        if (this.ua !== ua) {
           return;
         }
+
         this.setState({
           rtcSession: null,
           callStatus: CALL_STATUS_IDLE,
@@ -286,7 +421,7 @@ export default class SipProvider extends React.Component {
       });
 
       rtcSession.on('accepted', () => {
-        if (!this.mounted) {
+        if (this.ua !== ua) {
           return;
         }
 
@@ -311,73 +446,22 @@ export default class SipProvider extends React.Component {
         this.setState({ callStatus: CALL_STATUS_ACTIVE });
       });
 
-      if (this.state.callDirection === CALL_DIRECTION_INCOMING && autoAnswer) {
-        console.log('Answer auto ON');
+      if (this.state.callDirection === CALL_DIRECTION_INCOMING && this.props.autoAnswer) {
+        this.logger.log('Answer auto ON');
         this.answerCall();
-      } else if (this.state.callDirection === CALL_DIRECTION_INCOMING && !autoAnswer) {
-        console.log('Answer auto OFF');
+      } else if (this.state.callDirection === CALL_DIRECTION_INCOMING && !this.props.autoAnswer) {
+        this.logger.log('Answer auto OFF');
       } else if (this.state.callDirection === CALL_DIRECTION_OUTGOING) {
-        console.log('OUTGOING call');
+        this.logger.log('OUTGOING call');
       }
     });
 
     const extraHeadersRegister = this.props.extraHeaders.register || [];
     if (extraHeadersRegister.length) {
-      this.ua.registrator().setExtraHeaders(extraHeadersRegister);
+      ua.registrator().setExtraHeaders(extraHeadersRegister);
     }
-    this.ua.start();
+    ua.start();
   }
-
-  componentWillUnmount() {
-    delete this.remoteAudio;
-    this.mounted = false;
-  }
-
-  answerCall = () => {
-    if (!this.state.rtcSession) {
-      throw new Error("Can't answer - no RTC session");
-    }
-    this.state.rtcSession.answer({
-      mediaConstraints: {
-        audio: true,
-        video: false,
-      },
-      pcConfig: {
-        iceServers: this.props.iceServers,
-      },
-    });
-  };
-
-  registerSip = () => {
-    return this.ua.register();
-  };
-  unregisterSip = () => {
-    return this.ua.unregister();
-  };
-
-  stopCall = () => {
-    // call stop
-    this.setState({ callStatus: CALL_STATUS_STOPPING });
-    this.ua.terminateSessions();
-  };
-
-  startCall = (destination) => {
-    // call start
-    const { iceServers, sessionTimersExpires } = this.props;
-    const extraHeadersInvite = this.props.extraHeaders.invite;
-
-    const options = {
-      extraHeaders: extraHeadersInvite,
-      mediaConstraints: { audio: true, video: false },
-      pcConfig: {
-        iceServers,
-      },
-      sessionTimersExpires,
-    };
-
-    this.ua.call(destination, options);
-    this.setState({ callStatus: CALL_STATUS_STARTING });
-  };
 
   render() {
     return this.props.children;
