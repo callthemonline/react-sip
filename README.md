@@ -1,6 +1,11 @@
 React SIP
 ===
 
+[![license](https://img.shields.io/github/license/callthemonline/react-sip.svg)](https://github.com/callthemonline/react-sip/blob/master/LICENSE)
+[![npm version](https://img.shields.io/npm/v/react-sip.svg)](https://www.npmjs.com/package/react-sip)
+[![npm downloads](https://img.shields.io/npm/dy/react-sip.svg)](https://www.npmjs.com/package/react-sip)
+[![build status](https://travis-ci.org/callthemonline/react-sip.svg?branch=master)](https://travis-ci.org/callthemonline/react-sip)
+
 React wrapper for [jssip](https://github.com/versatica/JsSIP).
 
 
@@ -62,27 +67,27 @@ Child components get access to this context:
 }
 ```
 
-See [lib/types.js](./src/lib/types.js) for details of what’s included in `sipType` and `callType`.
-
+See [lib/types.js](./src/lib/types.js) for technical details of what `sipType` and `callType` are.
+An overview is given below:
 
 ### sip
 
 `sip.status` represents SIP connection status and equals to one of these values:
 
-* `'sipStatus/DISCONNECTED'` when `host`, `port` or `user` is not defined
-* `'sipStatus/CONNECTING'`
-* `'sipStatus/CONNECTED'`
-* `'sipStatus/REGISTERED'` after calling `registerSip` or after `'sipStatus/CONNECTED'` when `autoRegister` is true
-* `'sipStatus/ERROR'` in case of configuration, connection or registration problems
+*   `'sipStatus/DISCONNECTED'` when `host`, `port` or `user` is not defined
+*   `'sipStatus/CONNECTING'`
+*   `'sipStatus/CONNECTED'`
+*   `'sipStatus/REGISTERED'` after calling `registerSip` or after `'sipStatus/CONNECTED'` when `autoRegister` is true
+*   `'sipStatus/ERROR'` in case of configuration, connection or registration problems
 
 `sip.errorType`:
 
-* `'sipErrorType/CONFIGURATION'`
-* `'sipErrorType/CONNECTION'`
-* `'sipErrorType/REGISTRATION'`
+*   `null` when `sip.status` is not `'sipStatus/ERROR'`
+*   `'sipErrorType/CONFIGURATION'`
+*   `'sipErrorType/CONNECTION'`
+*   `'sipErrorType/REGISTRATION'`
 
-`sip.host`, `sip.port`, `sip.user`, `...` – `<SipProvider />` props.
-
+`sip.host`, `sip.port`, `sip.user`, `...` – `<SipProvider />`’s props (to make them easy to be displayed in the UI).
 
 ### call
 
@@ -90,16 +95,16 @@ See [lib/types.js](./src/lib/types.js) for details of what’s included in `sipT
 
 `call.status` represents the status of the call:
 
-* `'callStatus/IDLE'` between calls (even when disconnected)
-* `'callStatus/STARTING'` active incoming or outgoing call request
-* `'callStatus/ACTIVE'` during ongoing call
-* `'callStatus/STOPPING'` during call cancelation request
+*   `'callStatus/IDLE'` between calls (even when disconnected)
+*   `'callStatus/STARTING'` active incoming or outgoing call request
+*   `'callStatus/ACTIVE'` during ongoing call
+*   `'callStatus/STOPPING'` during call cancelation request
 
 `call.direction` indicates the direction of the ongoing call:
 
-* `null` between calls
-* `'callDirection/INCOMING'`
-* `'callDirection/OUTGOING'`
+*   `null` between calls
+*   `'callDirection/INCOMING'`
+*   `'callDirection/OUTGOING'`
 
 `call.counterpart` represents the call _destination_ in case of outgoing call and _caller_ for
 incoming calls.
@@ -111,9 +116,9 @@ When `autoRegister` is set to `false`, you can call `sipRegister()` and `sipUnre
 
 To make calls, simply use these functions:
 
-* `answerCall()`
-* `startCall(destination)`
-* `stopCall()`
+*   `answerCall()`
+*   `startCall(destination)`
+*   `stopCall()`
 
 The value for `destination` argument equals to the target SIP user without the host part (e.g. `+441234567890` or `bob`).
 The omitted host part is equal to host you’ve defined in `SipProvider` props (e.g. `sip.example.com`).
@@ -136,4 +141,10 @@ import {
   CALL_DIRECTION_INCOMING,
   CALL_DIRECTION_OUTGOING,
 } from 'react-sip';
+```
+
+Custom PropTypes types are also provided by the library:
+
+```js
+import { callType, extraHeadersType, iceServersType, sipType } from 'react-sip';
 ```
