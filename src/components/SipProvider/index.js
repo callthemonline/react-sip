@@ -267,12 +267,10 @@ export default class SipProvider extends React.Component {
       });
     } catch (error) {
       this.logger.debug('Error', error.message, error);
-      this.onMount(function callback() {
-        this.setState({
-          sipStatus: SIP_STATUS_ERROR,
-          sipErrorType: SIP_ERROR_TYPE_CONFIGURATION,
-          sipErrorMessage: error.message,
-        });
+      this.setState({
+        sipStatus: SIP_STATUS_ERROR,
+        sipErrorType: SIP_ERROR_TYPE_CONFIGURATION,
+        sipErrorMessage: error.message,
       });
       return;
     }
