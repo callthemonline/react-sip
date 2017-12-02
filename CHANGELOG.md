@@ -1,7 +1,7 @@
 `react-sip` changelog
 ===
 
-[0.5.0](https://github.com/callthemonline/react-sip/tree/v0.5.0) (2017-11-25)
+[0.5.0](https://github.com/callthemonline/react-sip/tree/v0.5.0) (2017-12-02)
 ---
 
 [All Commits](https://github.com/callthemonline/react-sip/compare/0.4.0...0.5.0)
