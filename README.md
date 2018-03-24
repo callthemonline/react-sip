@@ -34,6 +34,7 @@ ReactDOM.render(
     password={sipPassword} // usually required (e.g. from ENV or props)
     autoRegister={true} // true by default, see jssip.UA option register
     autoAnswer={false} // automatically answer incoming calls; false by default
+    iceRestart={false} // force ICE session to restart on every WebRTC call; false by default
     sessionTimersExpires={120} // value for Session-Expires header; 120 by default
     extraHeaders={{ // optional sip headers to send
       register: ['X-Foo: foo', 'X-Bar: bar'],
