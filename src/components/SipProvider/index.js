@@ -43,6 +43,7 @@ export default class SipProvider extends React.Component {
     password: string,
     autoRegister: bool,
     autoAnswer: bool,
+    iceRestart: bool,
     sessionTimersExpires: number,
     extraHeaders: extraHeadersType,
     iceServers: iceServersType,
@@ -58,6 +59,7 @@ export default class SipProvider extends React.Component {
     password: null,
     autoRegister: true,
     autoAnswer: false,
+    iceRestart: false,
     sessionTimersExpires: 120,
     extraHeaders: { register: [], invite: [] },
     iceServers: [],
@@ -211,6 +213,7 @@ export default class SipProvider extends React.Component {
     const options = {
       extraHeaders,
       mediaConstraints: { audio: true, video: false },
+      rtcOfferConstraints: { 'iceRestart': this.props.iceRestart },
       pcConfig: {
         iceServers,
       },
