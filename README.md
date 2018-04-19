@@ -30,6 +30,7 @@ ReactDOM.render(
   <SipProvider
     host="sip.example.com"
     port={7443}
+    pathname="/ws" // Path in socket URI (e.g. wss://sip.example.com:7443/ws); "" by default
     user="alice"
     password={sipPassword} // usually required (e.g. from ENV or props)
     autoRegister={true} // true by default, see jssip.UA option register
