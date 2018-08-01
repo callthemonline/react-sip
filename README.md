@@ -64,7 +64,7 @@ Child components get access to this context:
 }
 ```
 
-See [lib/types.js](./src/lib/types.js) for technical details of what `sipType` and `callType` are.
+See [lib/types.ts](./src/lib/types.ts) for technical details of what `sipType` and `callType` are.
 An overview is given below:
 
 ### sip
