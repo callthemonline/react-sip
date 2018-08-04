@@ -1,5 +1,12 @@
 # `react-sip` changelog
 
+## [0.8.0](https://github.com/callthemonline/react-sip/tree/0.8.0) (2018-08-04)
+
+[All Commits](https://github.com/callthemonline/react-sip/compare/0.7.0...0.8.0)
+
+- Guard against multiple SipProviders ([#22](https://github.com/callthemonline/react-sip/pull/22))
+- Switch to TypeScript, TSLint and Prettier ([#21](https://github.com/callthemonline/react-sip/pull/21))
+
 ## [0.7.0](https://github.com/callthemonline/react-sip/tree/0.7.0) (2018-04-19)
 
 [All Commits](https://github.com/callthemonline/react-sip/compare/0.6.0...0.7.0)

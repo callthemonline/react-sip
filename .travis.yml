@@ -1,7 +1,7 @@
 language: node_js
 node_js:
-- "8"
-- "10"
+- '8'
+- '10'
 cache:
   directories:
   - node_modules
@@ -16,6 +16,6 @@ deploy:
   skip_cleanup: true
   email: denisnikulin@gmail.com
   api_key:
-    secure: vuaFHgXuq48pRlweCAdJ2L7/9sv/QoxHEPenBJPOo60Hi23GHuHXQjXdlegEaaDpZDPQdkB3FtslRlMci8SrJ5vlLzi/0UPRqm8t5BIALUW704yJ64eaPuE1Y6fviS5VPXRbbdEFAl5QRWgL+DHrra4NBQhzq3oWMXiTmTXSJdxvr37l5JLcpVrh6zWpPSAuxXu7hkdRp04NzttQreci7FA4hweVR7nqqpVKgAhmUKjNhkizt7ytiyoBq1taLcohd7AcW8jaxVbvL2dzTLZj7uREYKBBb7A+2wcKGAOxEdiP7vr3G/b03qps+I6sl1iv7U9IG9P5lh7PWmjv1uEicwvWrH+CpW50U/vkI9Batu6bTLxdIJjt1I8eL/kOH8DV+ZPEIpZjm5/3Z30fRhbv4KiiS8V0tfsz9AhniPvgZkLJ/kQSHjUkVMIIMp+XzGkEW13D8QUT56oR73TCy3nDV7k5tGJWlFjrsqudZ4H5iYThTZv1GoFf4DLd3o1V/y3QimMa44pmLxanlGep2EDJ+oZinsZC+pDN6bU9UCqOy0LMGfcMhF0tFZbLAdN5qzFVNFMWKKE5BxkGaRA3H4R930h2AZcEF/e2jLnYoHkAhHkjhXGfAXSXLp6pr1ZVmZU85IOPiNFTwnnUakuPPVE12oM8Ssxcyr7Ka3pX6GziaRo=
+    secure: RbAxwXp3N0Jbw3+ZC9nnERakdhq7ZBouKco1eBP0PLI8WGvSFYNUiv/l7BEFP6l8rOgbi8HEgYQMH8gwMN+6HxRRFR2S2zDTtx9+1HDXVi0UnPlTBqRm9evFAuEInqrvco77ka9Osn4hA0B+dpnyQea+zFCc+DHLizW9QLzLj+FqN+f45/0gf1NVNVjllZXYwOYjEQ5geu1h69Z0K67NVF1l32HP0WF84W7Oa40edR1JayLE3UClXcVdVIllKL3rpfje4mv7IJ48l/QjTdDbV6GAcX6SUm4lo5yKC//Jxi5V5ukD1Yaoq7oTZo5l/18dS+tc+g3GW+euWc7aGet3L86UjeZt3aRphcQFV7wApJh1tyybcwP5S3Yx4bYD8MHID6lIJeCob1vc575nO+TcGuFFeO/c14N3UB3xfHzcWcNUTTSz7xhRj/cs3bLd138CuFOHjxCw6tZoGLdj4KSK//H4W3y2VoW3K5V3+WAM3S/2p8OT6Z11f0CRknDVqgbHCCJZjwl1bJ2x90Cos9mroyt7Zxv29zOGAGNAVatWEZM6OMY3oHlYX2Pph1RT/2s91MYbJoM6gSpKpPxGTmI38vJUU6gLK8JxDl7fFtXoJXagN22s9coAdUrxg+ILFmcm8qUeWVXxrh98Qdhm4YdyiZrdAHLmxxEjn/M+gWfHpDA=
   on:
     tags: true

@@ -3,27 +3,13 @@ import * as PropTypes from "prop-types";
 import * as React from "react";
 import dummyLogger from "../../lib/dummyLogger";
 import {
-  callPropType,
-  ExtraHeaders,
-  extraHeadersPropType,
-  IceServers,
-  iceServersPropType,
-  sipPropType,
-} from "../../lib/types";
-
-import {
   CALL_DIRECTION_INCOMING,
   CALL_DIRECTION_OUTGOING,
-  //
   CALL_STATUS_ACTIVE,
   CALL_STATUS_IDLE,
   CALL_STATUS_STARTING,
   CALL_STATUS_STOPPING,
-  //
-  CallDirection,
-  CallStatus,
   SIP_ERROR_TYPE_CONFIGURATION,
-  //
   SIP_ERROR_TYPE_CONNECTION,
   SIP_ERROR_TYPE_REGISTRATION,
   SIP_STATUS_CONNECTED,
@@ -31,9 +17,21 @@ import {
   SIP_STATUS_DISCONNECTED,
   SIP_STATUS_ERROR,
   SIP_STATUS_REGISTERED,
+} from "../../lib/enums";
+import {
+  CallDirection,
+  CallStatus,
   SipErrorType,
   SipStatus,
 } from "../../lib/enums";
+import {
+  callPropType,
+  ExtraHeaders,
+  extraHeadersPropType,
+  IceServers,
+  iceServersPropType,
+  sipPropType,
+} from "../../lib/types";
 
 export default class SipProvider extends React.Component<
   {
