@@ -150,9 +150,16 @@ export default class SipProvider extends React.Component<
   }
 
   public componentDidMount() {
-    // TODO check against having two instances of SipProvider in one app, which is not allowed
+    if (window.document.getElementById("sip-provider-audio")) {
+      throw new Error(
+        `Creating two SipProviders in one application is forbidden. If that's not the case ` +
+          `then check if you're using "sip-provider-audio" as id attribute for any existing ` +
+          `element`,
+      );
+    }
 
     this.remoteAudio = window.document.createElement("audio");
+    this.remoteAudio.id = "sip-provider-audio";
     window.document.body.appendChild(this.remoteAudio);
 
     this.reconfigureDebug();
@@ -176,6 +183,7 @@ export default class SipProvider extends React.Component<
   }
 
   public componentWillUnmount() {
+    this.remoteAudio.parentNode.removeChild(this.remoteAudio);
     delete this.remoteAudio;
     if (this.ua) {
       this.ua.stop();
