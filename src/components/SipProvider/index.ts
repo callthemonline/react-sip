@@ -43,10 +43,10 @@ export default class SipProvider extends React.Component<
     autoRegister: boolean;
     autoAnswer: boolean;
     iceRestart: boolean;
-    sessionTimersExpires: PropTypes.number;
+    sessionTimersExpires: number;
     extraHeaders: ExtraHeaders;
     iceServers: IceServers;
-    debug: PropTypes.bool;
+    debug: boolean;
   },
   {
     sipStatus: SipStatus;
